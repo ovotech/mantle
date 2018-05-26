@@ -6,7 +6,6 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -29,11 +28,8 @@ func check(e error) {
 	}
 }
 
-func googleKMSEncrypt(dek []byte, projectid, locationid, keyringid,
-	cryptokeyid string) (encrypteddek string) {
-	plaintext := "plaintextexample"
-	// Authorize the client using Application Default Credentials.
-	// See https://g.co/dv/identity/protocols/application-default-credentials
+func googleKMSCrypto(payload []byte, projectid, locationid, keyringid,
+	cryptokeyid string, encrypt bool) (resultText []byte) {
 	ctx := context.Background()
 	client, err := google.DefaultClient(ctx, cloudkms.CloudPlatformScope)
 	if err != nil {
@@ -47,18 +43,33 @@ func googleKMSEncrypt(dek []byte, projectid, locationid, keyringid,
 	}
 
 	parentName := fmt.Sprintf("projects/%s/locations/%s/keyRings/%s/cryptoKeys/%s",
-		projectid, locationid, projectid, cryptokeyid)
+		projectid, locationid, keyringid, cryptokeyid)
 
-	req := &cloudkms.EncryptRequest{
-		Plaintext: base64.StdEncoding.EncodeToString([]byte(plaintext)),
+	//ar errm error
+	if encrypt {
+		req := &cloudkms.EncryptRequest{
+			Plaintext: base64.StdEncoding.EncodeToString(payload),
+		}
+		resp, err := kmsService.Projects.Locations.KeyRings.CryptoKeys.Encrypt(parentName, req).Do()
+		check(err)
+		var errm error
+		resultText, errm = base64.StdEncoding.DecodeString(resp.Ciphertext)
+		check(errm)
+	} else {
+		fmt.Printf("decrypt payload: %s", payload)
+		req := &cloudkms.DecryptRequest{
+			Ciphertext: base64.StdEncoding.EncodeToString(payload),
+		}
+		resp, err := kmsService.Projects.Locations.KeyRings.CryptoKeys.Decrypt(parentName, req).Do()
+		check(err)
+		var errm error
+		resultText, errm = base64.StdEncoding.DecodeString(resp.Plaintext)
+		check(errm)
 	}
-	resp, err := kmsService.Projects.Locations.KeyRings.CryptoKeys.Encrypt(parentName, req).Do()
 	if err != nil {
 		log.Fatal(err)
 	}
-	encrypteddek = resp.Ciphertext
 	return
-	//fmt.Printf("returned from KMS: %x\n", resp.Ciphertext)
 }
 
 func dek() (dek []byte) {
@@ -69,29 +80,45 @@ func dek() (dek []byte) {
 }
 
 func nonce() (nonce []byte) {
-	//Never use more than 2^32 random nonces with a given key because of the risk of a repeat.
+	//Never use more than 2^32 random nonces with a given key because of the risk
+	// of a repeat.
 	nonce = make([]byte, 12)
 	_, err := io.ReadFull(rand.Reader, nonce)
 	check(err)
 	return
 }
 
-func main() {
+func validateInput(defaultOptions Defaults) {
+	//TODO: validate the input flags, panic if something's not right
+}
 
+func main() {
 	defaultOptions := Defaults{}
 	parser := flags.NewParser(&defaultOptions, flags.Default)
-	parser.Parse()
-	fmt.Printf("Verbose: %v\n", defaultOptions.ProjectId)
-	fmt.Printf("Terse: %v\n", defaultOptions.LocationId)
-	fmt.Printf("Terse: %v\n", defaultOptions.KeyRingId)
-	fmt.Printf("Terse: %v\n", defaultOptions.CryptoKeyId)
-
+	_, err := parser.Parse()
+	check(err)
+	validateInput(defaultOptions)
 	dek := dek()
+	fmt.Printf("dek: %s", dek)
 	nonce := nonce()
-	cipherblock := cipherblock(dek)
-	fmt.Println(encryptedText(cipherblock, nonce))
-	fmt.Println(googleKMSEncrypt(dek, projectid, locationid, keyringid,
-		cryptokeyid))
+
+	//encrypt data using aes-256-gcm
+	cipherTexts := cipherText([]byte("exampleplaintext"), cipherblock(dek), nonce, true)
+
+	//encrypt DEK
+	encryptedDek := googleKMSCrypto(dek, defaultOptions.ProjectId,
+		defaultOptions.LocationId, defaultOptions.KeyRingId,
+		defaultOptions.CryptoKeyId, true)
+	fmt.Printf("encrypted dek: %s", encryptedDek)
+
+	decryptedDek := googleKMSCrypto(encryptedDek, defaultOptions.ProjectId,
+		defaultOptions.LocationId, defaultOptions.KeyRingId,
+		defaultOptions.CryptoKeyId, false)
+	fmt.Printf("decrypted dek: %s", decryptedDek)
+
+	plainText := cipherText(cipherTexts, cipherblock(decryptedDek), nonce, false)
+	fmt.Printf("plaintext: %s", plainText)
+
 	// //TODO: shred plaintext file
 }
 
@@ -101,39 +128,21 @@ func cipherblock(dek []byte) (cipherblock cipher.Block) {
 	return
 }
 
-func encryptedText(cipherblock cipher.Block, nonce []byte) (ciphertext []byte) {
-	plaintext := []byte("exampleplaintext")
+func cipherText(text []byte, cipherblock cipher.Block, nonce []byte, seal bool) (ciphertext []byte) {
+	//TODO: get this from file or input flag
+	//plaintext := []byte("exampleplaintext")
 
 	aesgcm, err := cipher.NewGCM(cipherblock)
 	if err != nil {
 		panic(err.Error())
 	}
-	ciphertext = aesgcm.Seal(nil, nonce, plaintext, nil)
+	var errm error
+	if seal {
+		ciphertext = aesgcm.Seal(nil, nonce, text, nil)
+	} else {
+		ciphertext, errm = aesgcm.Open(nil, nonce, text, nil)
+	}
+	check(errm)
+
 	return
-}
-
-func ExampleNewGCMDecrypter() {
-	// The key argument should be the AES key, either 16 or 32 bytes
-	// to select AES-128 or AES-256.
-	key := []byte("AES256Key-32Characters1234567890")
-	ciphertext, _ := hex.DecodeString("***REMOVED***")
-
-	nonce, _ := hex.DecodeString("***REMOVED***")
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	aesgcm, err := cipher.NewGCM(block)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	plaintext, err := aesgcm.Open(nil, nonce, ciphertext, nil)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	fmt.Printf("%s\n", string(plaintext))
 }
