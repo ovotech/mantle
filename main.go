@@ -85,20 +85,10 @@ func googleKMSDecrypt(payload []byte, parentName string,
 	return
 }
 
-//dek creates a random, length 32, byte slice
-func dek() (dek []byte) {
-	dek = make([]byte, 32)
-	_, err := io.ReadFull(rand.Reader, dek)
-	check(err)
-	return
-}
-
-//nonce creates a random, length 12, byte slice
-func nonce() (nonce []byte) {
-	//Never use more than 2^32 random nonces with a given key because of the risk
-	// of a repeat.
-	nonce = make([]byte, 12)
-	_, err := io.ReadFull(rand.Reader, nonce)
+//randByteSlice creates and returns a random byte slice, of desired size
+func randByteSlice(size int) (bytes []byte) {
+	bytes = make([]byte, size)
+	_, err := io.ReadFull(rand.Reader, bytes)
 	check(err)
 	return
 }
@@ -108,9 +98,9 @@ func main() {
 	parser := flags.NewParser(&defaultOptions, flags.Default)
 	_, err := parser.Parse()
 	check(err)
-	dek := dek()
+	dek := randByteSlice(32)
 	fmt.Printf("%x\n", dek)
-	nonce := nonce()
+	nonce := randByteSlice(12)
 
 	//encrypt data using aes-256-gcm
 	cipherTexts := cipherText([]byte("exampleplaintext"), cipherblock(dek),
