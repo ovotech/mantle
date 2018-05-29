@@ -14,19 +14,22 @@ import (
 	cloudkms "google.golang.org/api/cloudkms/v1"
 )
 
+//Defaults type defining input flags
 type Defaults struct {
-	ProjectID   string "short:\"p\" long:\"projectId\" description:\" Show verbose debug information\" required:\"true\""
-	LocationID  string `short:"l" long:"locationId" description:"Shows terse output" required:"true"`
-	KeyRingID   string `short:"k" long:"keyringId" description:"Shows terse output" required:"true"`
-	CryptoKeyID string `short:"c" long:"cryptokeyId" description:"Shows terse output" required:"true"`
+	ProjectID   string `short:"p" long:"projectId" description:"Google projectId" required:"true"`
+	LocationID  string `short:"l" long:"locationId" description:"Google kms locationId" required:"true"`
+	KeyRingID   string `short:"k" long:"keyringId" description:"Google kms keyRingId" required:"true"`
+	CryptoKeyID string `short:"c" long:"cryptokeyId" description:"Google kms crytoKeyId" required:"true"`
 }
 
+//check panics if error is not nil
 func check(e error) {
 	if e != nil {
 		panic(e.Error())
 	}
 }
 
+//kmsClient returns a kms service created from a default google client
 func kmsClient() (kmsService *cloudkms.Service) {
 	ctx := context.Background()
 	client, errc := google.DefaultClient(ctx, cloudkms.CloudPlatformScope)
@@ -36,6 +39,7 @@ func kmsClient() (kmsService *cloudkms.Service) {
 	return
 }
 
+//googleKMSCrypto uses google kms to either encrypt or decrypt a byte slice
 func googleKMSCrypto(payload []byte, projectid, locationid, keyringid,
 	cryptokeyid string, encrypt bool) (resultText []byte) {
 	kmsService := kmsClient()
@@ -44,13 +48,13 @@ func googleKMSCrypto(payload []byte, projectid, locationid, keyringid,
 		locationid, keyringid, cryptokeyid)
 	if encrypt {
 		resultText = googleKMSEncrypt(payload, parentName, kmsService)
-
 	} else {
 		resultText = googleKMSDecrypt(payload, parentName, kmsService)
 	}
 	return
 }
 
+//googleKMSEncrypt uses google kms to encypt a bite slice
 func googleKMSEncrypt(payload []byte, parentName string,
 	kmsService *cloudkms.Service) (resultText []byte) {
 	req := &cloudkms.EncryptRequest{
@@ -65,6 +69,7 @@ func googleKMSEncrypt(payload []byte, parentName string,
 	return
 }
 
+//googleKMSDecrypt uses google kms to decypt a bite slice
 func googleKMSDecrypt(payload []byte, parentName string,
 	kmsService *cloudkms.Service) (resultText []byte) {
 	fmt.Printf("decrypt payload: %x\n", payload)
@@ -80,6 +85,7 @@ func googleKMSDecrypt(payload []byte, parentName string,
 	return
 }
 
+//dek creates a random, length 32, byte slice
 func dek() (dek []byte) {
 	dek = make([]byte, 32)
 	_, err := io.ReadFull(rand.Reader, dek)
@@ -87,6 +93,7 @@ func dek() (dek []byte) {
 	return
 }
 
+//nonce creates a random, length 12, byte slice
 func nonce() (nonce []byte) {
 	//Never use more than 2^32 random nonces with a given key because of the risk
 	// of a repeat.
@@ -96,16 +103,11 @@ func nonce() (nonce []byte) {
 	return
 }
 
-func validateInput(defaultOptions Defaults) {
-	//TODO: validate the input flags, panic if something's not right
-}
-
 func main() {
 	defaultOptions := Defaults{}
 	parser := flags.NewParser(&defaultOptions, flags.Default)
 	_, err := parser.Parse()
 	check(err)
-	validateInput(defaultOptions)
 	dek := dek()
 	fmt.Printf("%x\n", dek)
 	nonce := nonce()
@@ -113,6 +115,8 @@ func main() {
 	//encrypt data using aes-256-gcm
 	cipherTexts := cipherText([]byte("exampleplaintext"), cipherblock(dek),
 		nonce, true)
+
+	fmt.Printf("cipherTexts: %x\n", cipherTexts)
 
 	//encrypt DEK
 	encryptedDek := googleKMSCrypto(dek, defaultOptions.ProjectID,
@@ -131,12 +135,14 @@ func main() {
 	// //TODO: shred plaintext file
 }
 
+//cipherblock creates and returns a new aes cipher.Block
 func cipherblock(dek []byte) (cipherblock cipher.Block) {
 	cipherblock, err := aes.NewCipher(dek)
 	check(err)
 	return
 }
 
+//cipherText seals or opens the text
 func cipherText(text []byte, cipherblock cipher.Block, nonce []byte,
 	seal bool) (ciphertext []byte) {
 	aesgcm, err := cipher.NewGCM(cipherblock)
