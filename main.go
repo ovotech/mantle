@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"os"
 
 	flags "github.com/jessevdk/go-flags"
 	"golang.org/x/oauth2/google"
@@ -16,10 +17,10 @@ import (
 
 //Defaults type defining input flags
 type Defaults struct {
-	ProjectID   string `short:"p" long:"projectId" description:"Google projectId" required:"true"`
-	LocationID  string `short:"l" long:"locationId" description:"Google kms locationId" required:"true"`
-	KeyRingID   string `short:"k" long:"keyringId" description:"Google kms keyRingId" required:"true"`
 	CryptoKeyID string `short:"c" long:"cryptokeyId" description:"Google kms crytoKeyId" required:"true"`
+	KeyRingID   string `short:"k" long:"keyringId" description:"Google kms keyRingId" required:"true"`
+	LocationID  string `short:"l" long:"locationId" description:"Google kms locationId" required:"true"`
+	ProjectID   string `short:"p" long:"projectId" description:"Google projectId" required:"true"`
 }
 
 //check panics if error is not nil
@@ -27,6 +28,11 @@ func check(e error) {
 	if e != nil {
 		panic(e.Error())
 	}
+}
+
+func byteSliceToString(dat []byte) (resultString string) {
+	resultString = fmt.Sprint(string(dat[:]))
+	return
 }
 
 //kmsClient returns a kms service created from a default google client
@@ -72,7 +78,8 @@ func googleKMSEncrypt(payload []byte, parentName string,
 //googleKMSDecrypt uses google kms to decypt a bite slice
 func googleKMSDecrypt(payload []byte, parentName string,
 	kmsService *cloudkms.Service) (resultText []byte) {
-	fmt.Printf("decrypt payload: %x\n", payload)
+	fmt.Println(payload)
+	//fmt.Printf("decrypt payload: %x\n", payload)
 	req := &cloudkms.DecryptRequest{
 		Ciphertext: base64.StdEncoding.EncodeToString(payload),
 	}
@@ -93,37 +100,63 @@ func randByteSlice(size int) (bytes []byte) {
 	return
 }
 
+var defaultOptions = Defaults{}
+
+var parser = flags.NewParser(&defaultOptions, flags.Default)
+
 func main() {
-	defaultOptions := Defaults{}
-	parser := flags.NewParser(&defaultOptions, flags.Default)
-	_, err := parser.Parse()
-	check(err)
-	dek := randByteSlice(32)
-	fmt.Printf("%x\n", dek)
-	nonce := randByteSlice(12)
-
-	//encrypt data using aes-256-gcm
-	cipherTexts := cipherText([]byte("exampleplaintext"), cipherblock(dek),
-		nonce, true)
-
-	fmt.Printf("cipherTexts: %x\n", cipherTexts)
-
-	//encrypt DEK
-	encryptedDek := googleKMSCrypto(dek, defaultOptions.ProjectID,
-		defaultOptions.LocationID, defaultOptions.KeyRingID,
-		defaultOptions.CryptoKeyID, true)
-	fmt.Printf("encrypted dek: %x\n", encryptedDek)
-
-	decryptedDek := googleKMSCrypto(encryptedDek, defaultOptions.ProjectID,
-		defaultOptions.LocationID, defaultOptions.KeyRingID,
-		defaultOptions.CryptoKeyID, false)
-	fmt.Printf("decrypted dek: %x\n", decryptedDek)
-
-	plainText := cipherText(cipherTexts, cipherblock(decryptedDek), nonce, false)
-	fmt.Printf("plaintext: %s\n", plainText)
-
-	// //TODO: shred plaintext file
+	if _, err := parser.Parse(); err != nil {
+		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
+			os.Exit(0)
+		} else {
+			os.Exit(1)
+		}
+	}
 }
+
+// func main() {
+// 	defaultOptions := Defaults{}
+// 	parser := flags.NewParser(&defaultOptions, flags.Default)
+// 	parser.AddCommand("encrypt",
+// 		"Encrypts your data, returning everything required for future decryption",
+// 		"Creates a new DEK, a new nonce, encrypts the DEK using KMS, spits out "+
+// 			"(data + encrypted DEK) + nonce.",
+// 		&encryptCommand)
+// 	parser.AddCommand("decrypt",
+// 		"Encrypts your data, returning everything required for future decryption",
+// 		"Creates a new DEK, a new nonce, encrypts the DEK using KMS, spits out "+
+// 			"(data + encrypted DEK) + nonce.",
+// 		&encryptCommand)
+// 	_, err := parser.Parse()
+// 	//check(err)
+// 	if err == nil {
+// 		dek := randByteSlice(32)
+// 		fmt.Printf("%x\n", dek)
+// 		nonce := randByteSlice(12)
+//
+// 		//encrypt data using aes-256-gcm
+// 		cipherTexts := cipherText([]byte("exampleplaintext"), cipherblock(dek),
+// 			nonce, true)
+//
+// 		fmt.Printf("cipherTexts: %x\n", cipherTexts)
+//
+// 		//encrypt DEK
+// 		encryptedDek := googleKMSCrypto(dek, defaultOptions.ProjectID,
+// 			defaultOptions.LocationID, defaultOptions.KeyRingID,
+// 			defaultOptions.CryptoKeyID, true)
+// 		fmt.Printf("encrypted dek: %x\n", encryptedDek)
+//
+// 		decryptedDek := googleKMSCrypto(encryptedDek, defaultOptions.ProjectID,
+// 			defaultOptions.LocationID, defaultOptions.KeyRingID,
+// 			defaultOptions.CryptoKeyID, false)
+// 		fmt.Printf("decrypted dek: %x\n", decryptedDek)
+//
+// 		plainText := cipherText(cipherTexts, cipherblock(decryptedDek), nonce, false)
+// 		fmt.Printf("plaintext: %s\n", plainText)
+//
+// 		// //TODO: shred plaintext file
+// 	}
+// }
 
 //cipherblock creates and returns a new aes cipher.Block
 func cipherblock(dek []byte) (cipherblock cipher.Block) {
