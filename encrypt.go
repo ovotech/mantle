@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
@@ -40,18 +39,35 @@ func (x *EncryptCommand) Execute(args []string) error {
 	encryptedDek := googleKMSCrypto(dek, defaultOptions.ProjectID,
 		defaultOptions.LocationID, defaultOptions.KeyRingID,
 		defaultOptions.CryptoKeyID, true)
-	cipherTexts := base64.StdEncoding.EncodeToString(append(
+	cipherTexts := []byte(base64.StdEncoding.EncodeToString(append(
 		cipherText(dat, cipherblock(dek), []byte(x.Nonce), true),
-		encryptedDek...))
+		encryptedDek...)))
 	fmt.Println("-----BEGIN (DATA + ENCRYPTED DEK) STRING-----")
-	fmt.Println(cipherTexts)
+	fmt.Printf("%s\n", cipherTexts)
 	fmt.Println("-----END (DATA + ENCRYPTED DEK) STRING-----")
-	f, err := os.Create("cipher.txt")
-	check(err)
-	defer f.Close()
-	w := bufio.NewWriter(f)
-	_, err = fmt.Fprint(w, cipherTexts)
-	check(err)
-	w.Flush()
+	ioutil.WriteFile("cipher.txt", cipherTexts, 0644)
+	check(zerofill(x.Filepath))
 	return nil
+}
+
+//zerofill zerofills the desired file, and removes it
+func zerofill(filepath string) (err error) {
+	file, err := os.OpenFile(filepath, os.O_RDWR, 0666)
+	check(err)
+	defer file.Close()
+	fileInfo, err := file.Stat()
+	check(err)
+	if fileInfo.IsDir() {
+		fmt.Printf("%s\n", "Didn't zerofill/delete unencrypted file \""+
+			filepath+"\" as it's not a file")
+	} else {
+		zeroBytes := make([]byte, fileInfo.Size())
+		copy(zeroBytes[:], "0")
+		n, err := file.Write([]byte(zeroBytes))
+		check(err)
+		fmt.Printf("Wiped %v bytes from %s.\n", n, filepath)
+		err = os.Remove(filepath)
+		check(err)
+	}
+	return
 }
