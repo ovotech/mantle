@@ -33,41 +33,34 @@ var encryptCommand EncryptCommand
 // 5. Print out result to command-line, and to file
 func (x *EncryptCommand) Execute(args []string) error {
 	fmt.Println("Encrypting...")
-	dek := randByteSlice(32)
+	dekSize := 32
+	dek := randByteSlice(dekSize)
 	dat, err := ioutil.ReadFile(x.Filepath)
 	check(err)
+	encrypt := true
+	fileMode := os.FileMode.Perm(0644)
 	encryptedDek := googleKMSCrypto(dek, defaultOptions.ProjectID,
 		defaultOptions.LocationID, defaultOptions.KeyRingID,
-		defaultOptions.CryptoKeyID, true)
-	cipherTexts := []byte(base64.StdEncoding.EncodeToString(append(
-		cipherText(dat, cipherblock(dek), []byte(x.Nonce), true),
-		encryptedDek...)))
-	fmt.Println("-----BEGIN (DATA + ENCRYPTED DEK) STRING-----")
+		defaultOptions.CryptoKeyID, encrypt)
+	cipherTexts := insertNewLines([]byte(base64.StdEncoding.EncodeToString(append(
+		cipherText(dat, cipherblock(dek), []byte(x.Nonce), encrypt),
+		encryptedDek...))))
+	fmt.Println("-----BEGIN (ENCRYPTED DATA + DEK) STRING-----")
 	fmt.Printf("%s\n", cipherTexts)
-	fmt.Println("-----END (DATA + ENCRYPTED DEK) STRING-----")
-	ioutil.WriteFile("cipher.txt", cipherTexts, 0644)
+	fmt.Println("-----END (ENCRYPTED DATA + DEK) STRING-----")
+	ioutil.WriteFile("cipher.txt", cipherTexts, fileMode)
 	check(zerofill(x.Filepath))
 	return nil
 }
 
-//zerofill zerofills the desired file, and removes it
-func zerofill(filepath string) (err error) {
-	file, err := os.OpenFile(filepath, os.O_RDWR, 0666)
-	check(err)
-	defer file.Close()
-	fileInfo, err := file.Stat()
-	check(err)
-	if fileInfo.IsDir() {
-		fmt.Printf("%s\n", "Didn't zerofill/delete unencrypted file \""+
-			filepath+"\" as it's not a file")
-	} else {
-		zeroBytes := make([]byte, fileInfo.Size())
-		copy(zeroBytes[:], "0")
-		n, err := file.Write([]byte(zeroBytes))
-		check(err)
-		fmt.Printf("Wiped %v bytes from %s.\n", n, filepath)
-		err = os.Remove(filepath)
-		check(err)
+// insertNewLines inserts a newline char at specific intervals
+func insertNewLines(cipherTexts []byte) (newLineText []byte) {
+	interval := 40
+	for i, char := range cipherTexts {
+		if i > 0 && (i%interval == 0) {
+			newLineText = append(newLineText, []byte("\n")...)
+		}
+		newLineText = append(newLineText, char)
 	}
 	return
 }
