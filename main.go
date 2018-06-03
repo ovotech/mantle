@@ -23,6 +23,10 @@ type Defaults struct {
 	ProjectID   string `short:"p" long:"projectId" description:"Google projectId" required:"true"`
 }
 
+var defaultOptions = Defaults{}
+
+var parser = flags.NewParser(&defaultOptions, flags.Default)
+
 //check panics if error is not nil
 func check(e error) {
 	if e != nil {
@@ -30,6 +34,7 @@ func check(e error) {
 	}
 }
 
+//byteSliceToString converts a byte slice to a string, and returns it
 func byteSliceToString(dat []byte) (resultString string) {
 	resultString = fmt.Sprint(string(dat[:]))
 	return
@@ -78,8 +83,6 @@ func googleKMSEncrypt(payload []byte, parentName string,
 //googleKMSDecrypt uses google kms to decypt a bite slice
 func googleKMSDecrypt(payload []byte, parentName string,
 	kmsService *cloudkms.Service) (resultText []byte) {
-	fmt.Println(payload)
-	//fmt.Printf("decrypt payload: %x\n", payload)
 	req := &cloudkms.DecryptRequest{
 		Ciphertext: base64.StdEncoding.EncodeToString(payload),
 	}
@@ -100,9 +103,27 @@ func randByteSlice(size int) (bytes []byte) {
 	return
 }
 
-var defaultOptions = Defaults{}
-
-var parser = flags.NewParser(&defaultOptions, flags.Default)
+//zerofill zerofills the desired file, and removes it
+func zerofill(filepath string) (err error) {
+	file, err := os.OpenFile(filepath, os.O_RDWR, 0666)
+	check(err)
+	defer file.Close()
+	fileInfo, err := file.Stat()
+	check(err)
+	if fileInfo.IsDir() {
+		fmt.Printf("%s\n", "Didn't zerofill/delete unencrypted file \""+
+			filepath+"\" as it's not a file")
+	} else {
+		zeroBytes := make([]byte, fileInfo.Size())
+		copy(zeroBytes[:], "0")
+		n, err := file.Write([]byte(zeroBytes))
+		check(err)
+		fmt.Printf("Wiped %v bytes from %s.\n", n, filepath)
+		err = os.Remove(filepath)
+		check(err)
+	}
+	return
+}
 
 func main() {
 	if _, err := parser.Parse(); err != nil {
@@ -113,50 +134,6 @@ func main() {
 		}
 	}
 }
-
-// func main() {
-// 	defaultOptions := Defaults{}
-// 	parser := flags.NewParser(&defaultOptions, flags.Default)
-// 	parser.AddCommand("encrypt",
-// 		"Encrypts your data, returning everything required for future decryption",
-// 		"Creates a new DEK, a new nonce, encrypts the DEK using KMS, spits out "+
-// 			"(data + encrypted DEK) + nonce.",
-// 		&encryptCommand)
-// 	parser.AddCommand("decrypt",
-// 		"Encrypts your data, returning everything required for future decryption",
-// 		"Creates a new DEK, a new nonce, encrypts the DEK using KMS, spits out "+
-// 			"(data + encrypted DEK) + nonce.",
-// 		&encryptCommand)
-// 	_, err := parser.Parse()
-// 	//check(err)
-// 	if err == nil {
-// 		dek := randByteSlice(32)
-// 		fmt.Printf("%x\n", dek)
-// 		nonce := randByteSlice(12)
-//
-// 		//encrypt data using aes-256-gcm
-// 		cipherTexts := cipherText([]byte("exampleplaintext"), cipherblock(dek),
-// 			nonce, true)
-//
-// 		fmt.Printf("cipherTexts: %x\n", cipherTexts)
-//
-// 		//encrypt DEK
-// 		encryptedDek := googleKMSCrypto(dek, defaultOptions.ProjectID,
-// 			defaultOptions.LocationID, defaultOptions.KeyRingID,
-// 			defaultOptions.CryptoKeyID, true)
-// 		fmt.Printf("encrypted dek: %x\n", encryptedDek)
-//
-// 		decryptedDek := googleKMSCrypto(encryptedDek, defaultOptions.ProjectID,
-// 			defaultOptions.LocationID, defaultOptions.KeyRingID,
-// 			defaultOptions.CryptoKeyID, false)
-// 		fmt.Printf("decrypted dek: %x\n", decryptedDek)
-//
-// 		plainText := cipherText(cipherTexts, cipherblock(decryptedDek), nonce, false)
-// 		fmt.Printf("plaintext: %s\n", plainText)
-//
-// 		// //TODO: shred plaintext file
-// 	}
-// }
 
 //cipherblock creates and returns a new aes cipher.Block
 func cipherblock(dek []byte) (cipherblock cipher.Block) {

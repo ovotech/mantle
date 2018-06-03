@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"os"
 )
 
 func init() {
@@ -29,19 +32,29 @@ var decryptCommand DecryptCommand
 // 4. Outputs decrypted result to file
 func (x *DecryptCommand) Execute(args []string) error {
 	fmt.Println("Decrypting...")
-	dat, err := ioutil.ReadFile(x.Filepath)
+	file, err := os.Open(x.Filepath)
 	check(err)
-	cipherBase64 := string(dat)
-	cipherBytes, errb := base64.StdEncoding.DecodeString(cipherBase64)
+	defer file.Close()
+	s := bufio.NewScanner(file)
+	var buffer bytes.Buffer
+	for s.Scan() {
+		buffer.WriteString(s.Text())
+	}
+	cipherBytes, errb := base64.StdEncoding.DecodeString(buffer.String())
 	check(errb)
-	encryptedDek := cipherBytes[len(cipherBytes)-113 : len(cipherBytes)]
+	dekLength := 113
+	encrypt := false
+	outputFilepath := "plain.txt"
+	fileMode := os.FileMode.Perm(0644)
+	encryptedDek := cipherBytes[len(cipherBytes)-dekLength : len(cipherBytes)]
 	decryptedDek := googleKMSCrypto(encryptedDek, defaultOptions.ProjectID,
 		defaultOptions.LocationID, defaultOptions.KeyRingID,
-		defaultOptions.CryptoKeyID, false)
+		defaultOptions.CryptoKeyID, encrypt)
 	fmt.Printf("%x\n", decryptedDek)
-	plainText := cipherText(cipherBytes[0:len(cipherBytes)-113],
-		cipherblock(decryptedDek), []byte(x.Nonce), false)
+	plainText := cipherText(cipherBytes[0:len(cipherBytes)-dekLength],
+		cipherblock(decryptedDek), []byte(x.Nonce), encrypt)
 	fmt.Printf("plaintext: %s\n", plainText)
-	ioutil.WriteFile("plain.txt", plainText, 0644)
+	ioutil.WriteFile(outputFilepath, plainText, fileMode)
+	check(zerofill(x.Filepath))
 	return nil
 }
