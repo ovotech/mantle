@@ -13,7 +13,7 @@ func init() {
 	parser.AddCommand("encrypt",
 		"Encrypts your data, returning everything required for future decryption",
 		"Creates a new DEK, encrypts data with DEK, encrypts the DEK using KMS, "+
-			"spits out (data + encrypted DEK).",
+			"spits out encrypted data + encrypted DEK.",
 		&encryptCommand)
 }
 
@@ -38,6 +38,7 @@ func (x *EncryptCommand) Execute(args []string) error {
 	dat, err := ioutil.ReadFile(x.Filepath)
 	check(err)
 	encrypt := true
+	outputFilepath := "./cipher.txt"
 	fileMode := os.FileMode.Perm(0644)
 	encryptedDek := googleKMSCrypto(dek, defaultOptions.ProjectID,
 		defaultOptions.LocationID, defaultOptions.KeyRingID,
@@ -48,7 +49,9 @@ func (x *EncryptCommand) Execute(args []string) error {
 	fmt.Println("-----BEGIN (ENCRYPTED DATA + DEK) STRING-----")
 	fmt.Printf("%s\n", cipherTexts)
 	fmt.Println("-----END (ENCRYPTED DATA + DEK) STRING-----")
-	ioutil.WriteFile("cipher.txt", cipherTexts, fileMode)
+	ioutil.WriteFile(outputFilepath, cipherTexts, fileMode)
+	fmt.Printf("Encryption successful, ciphertext available at %s\n",
+		outputFilepath)
 	check(zerofill(x.Filepath))
 	return nil
 }
