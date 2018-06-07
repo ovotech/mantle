@@ -14,7 +14,6 @@ Ciphertext is decrypted by following the same process in reverse. The DEK is dec
 * `google credentials` on the host the aes-256-gcm-kms binary is run on, see [here](https://godoc.org/golang.org/x/oauth2/google#FindDefaultCredentials), that has kms decrypt permission
 * kms `cryptoKeyId`, `keyRingId`, `locationId` and `projectId` values
 * the `ciphertext` you want to decrypt in a file on the host you're invoking the binary from (defaults to ./cipher.txt)
-* a `nonce` string used by the [AEAD](https://golang.org/pkg/crypto/cipher/#AEAD) cipher `open` call, must match the nonce used for encryption
 
 ### `aes-256-gcm-kms decrypt` will:
 * split ciphertext into encrypted data + encrypted DEK
@@ -26,7 +25,7 @@ Ciphertext is decrypted by following the same process in reverse. The DEK is dec
 ### example
 
 ```
-$ aes-256-gcm-kms decrypt -c <cryptoKeyId> -k <keyringId> -l europe-west2 -p <projectId> -n b38f090f46b7
+$ aes-256-gcm-kms decrypt -c <cryptoKeyId> -k <keyringId> -l europe-west2 -p <projectId>
 Decrypting...
 Decryption successful, plaintext available at ./plain.txt
 Wiped 643 bytes from ./cipher.txt.
@@ -51,7 +50,6 @@ Help Options:
 
 [decrypt command options]
       -f, --filepath= Path of file to get encrypted string from (default: ./cipher.txt)
-      -n, --nonce=    Nonce for decryption
 ```
 
 ## how-to encrypt
@@ -60,7 +58,6 @@ Help Options:
 * `google credentials` on the host the aes-256-gcm-kms binary is run on, see [here](https://godoc.org/golang.org/x/oauth2/google#FindDefaultCredentials), that has kms encrypt permission
 * kms `cryptoKeyId`, `keyRingId`, `locationId` and `projectId` values
 * the `plaintext` you want to encrypt in a file on the host you're invoking the binary from (defaults to ./plain.txt)
-* a `nonce` string used by the [AEAD](https://golang.org/pkg/crypto/cipher/#AEAD) cipher `seal` call
 
 ### `aes-256-gcm-kms encrypt` will:
 * create a new DEK
@@ -72,7 +69,7 @@ Help Options:
 ### example
 
 ```
-$ aes-256-gcm-kms encrypt -c <cryptoKeyId> -k <keyringId> -l europe-west2 -p <projectId> -n b38f090f46b7
+$ aes-256-gcm-kms encrypt -c <cryptoKeyId> -k <keyringId> -l europe-west2 -p <projectId>
 Encrypting...
 -----BEGIN (ENCRYPTED DATA + DEK) STRING-----
 ***REMOVED***
@@ -115,5 +112,4 @@ Help Options:
 
 [encrypt command options]
       -f, --filepath= Path of file to encrypt (default: ./plain.txt)
-      -n, --nonce=    Nonce for encryption
 ```
