@@ -48,7 +48,6 @@ func (x *DecryptCommand) Execute(args []string) error {
 	fileMode := os.FileMode.Perm(0644)
 	encryptedDek := cipherBytes[cipherLength-dekLength : cipherLength]
 	nonce := cipherBytes[cipherLength-(dekLength+nonceLength) : cipherLength-dekLength]
-	fmt.Println(nonce)
 	decryptedDek := googleKMSCrypto(encryptedDek, defaultOptions.ProjectID,
 		defaultOptions.LocationID, defaultOptions.KeyRingID,
 		defaultOptions.CryptoKeyID, encrypt)
