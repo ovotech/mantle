@@ -35,7 +35,6 @@ func (x *EncryptCommand) Execute(args []string) error {
 	dekSize := 32
 	dek := randByteSlice(dekSize)
 	nonce := randByteSlice(nonceLength)
-	fmt.Println(nonce)
 	dat, err := ioutil.ReadFile(x.Filepath)
 	check(err)
 	encrypt := true
