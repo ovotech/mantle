@@ -112,7 +112,7 @@ Help Options:
 
 [encrypt command options]
       -f, --filepath= Path of file to encrypt (default: ./plain.txt)
-      -s, --singleLine  Disable use of newline chars in plain/cipher text
+      -s, --singleLine  Disable use of newline chars in ciphertext
 ```
 
 ## ciphertext contents

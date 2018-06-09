@@ -20,7 +20,7 @@ func init() {
 //EncryptCommand type
 type EncryptCommand struct {
 	Filepath   string `short:"f" long:"filepath" description:"Path of file to encrypt" default:"./plain.txt"`
-	SingleLine bool   `short:"s" long:"singleLine" description:"Disable use of newline chars in plain/cipher text"`
+	SingleLine bool   `short:"s" long:"singleLine" description:"Disable use of newline chars in ciphertext"`
 }
 
 var encryptCommand EncryptCommand
