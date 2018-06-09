@@ -19,8 +19,8 @@ func init() {
 
 //EncryptCommand type
 type EncryptCommand struct {
-	Filepath string `short:"f" long:"filepath" description:"Path of file to encrypt" default:"./plain.txt"`
-	Nonce    string `short:"n" long:"nonce" description:"Nonce for encryption" required:"true"`
+	Filepath   string `short:"f" long:"filepath" description:"Path of file to encrypt" default:"./plain.txt"`
+	SingleLine bool   `short:"s" long:"singleLine" description:"Disable use of newline chars in ciphertext"`
 }
 
 var encryptCommand EncryptCommand
@@ -35,6 +35,7 @@ func (x *EncryptCommand) Execute(args []string) error {
 	fmt.Println("Encrypting...")
 	dekSize := 32
 	dek := randByteSlice(dekSize)
+	nonce := randByteSlice(nonceLength)
 	dat, err := ioutil.ReadFile(x.Filepath)
 	check(err)
 	encrypt := true
@@ -43,9 +44,16 @@ func (x *EncryptCommand) Execute(args []string) error {
 	encryptedDek := googleKMSCrypto(dek, defaultOptions.ProjectID,
 		defaultOptions.LocationID, defaultOptions.KeyRingID,
 		defaultOptions.CryptoKeyID, encrypt)
-	cipherTexts := insertNewLines([]byte(base64.StdEncoding.EncodeToString(append(
-		cipherText(dat, cipherblock(dek), []byte(x.Nonce), encrypt),
-		encryptedDek...))))
+	cipherBytes := []byte(base64.StdEncoding.EncodeToString(append(
+		append(cipherText(dat, cipherblock(dek), nonce, encrypt),
+			nonce...),
+		encryptedDek...)))
+	var cipherTexts []byte
+	if x.SingleLine {
+		cipherTexts = cipherBytes
+	} else {
+		cipherTexts = insertNewLines(cipherBytes)
+	}
 	fmt.Println("-----BEGIN (ENCRYPTED DATA + DEK) STRING-----")
 	fmt.Printf("%s\n", cipherTexts)
 	fmt.Println("-----END (ENCRYPTED DATA + DEK) STRING-----")
