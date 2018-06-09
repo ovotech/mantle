@@ -20,7 +20,6 @@ func init() {
 //DecryptCommand type
 type DecryptCommand struct {
 	Filepath string `short:"f" long:"filepath" description:"Path of file to get encrypted string from" default:"./cipher.txt"`
-	Nonce    string `short:"n" long:"nonce" description:"Nonce for decryption" required:"true"`
 }
 
 var decryptCommand DecryptCommand
@@ -43,15 +42,17 @@ func (x *DecryptCommand) Execute(args []string) error {
 	cipherBytes, errb := base64.StdEncoding.DecodeString(buffer.String())
 	check(errb)
 	dekLength := 113
+	cipherLength := len(cipherBytes)
 	encrypt := false
 	outputFilepath := "./plain.txt"
 	fileMode := os.FileMode.Perm(0644)
-	encryptedDek := cipherBytes[len(cipherBytes)-dekLength : len(cipherBytes)]
+	encryptedDek := cipherBytes[cipherLength-dekLength : cipherLength]
+	nonce := cipherBytes[cipherLength-(dekLength+nonceLength) : cipherLength-dekLength]
 	decryptedDek := googleKMSCrypto(encryptedDek, defaultOptions.ProjectID,
 		defaultOptions.LocationID, defaultOptions.KeyRingID,
 		defaultOptions.CryptoKeyID, encrypt)
-	plainText := cipherText(cipherBytes[0:len(cipherBytes)-dekLength],
-		cipherblock(decryptedDek), []byte(x.Nonce), encrypt)
+	plainText := cipherText(cipherBytes[0:len(cipherBytes)-(dekLength+nonceLength)],
+		cipherblock(decryptedDek), nonce, encrypt)
 	ioutil.WriteFile(outputFilepath, plainText, fileMode)
 	fmt.Printf("Decryption successful, plaintext available at %s\n",
 		outputFilepath)
