@@ -1,0 +1,29 @@
+version: 2
+jobs:
+  goreleaser:
+    working_directory: /go/src/github.com/ovotech/aes-256-gcm-kms
+
+    docker:
+      - image: circleci/golang:1.8
+
+    steps:
+      - checkout
+
+      - run: curl -sL https://git.io/goreleaser | bash
+
+    filters:
+      tags:
+        only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+      branches:
+        only: master
+
+workflows:
+  version: 2
+  goreleaser_pipeline:
+    jobs:
+      - goreleaser:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+            branches:
+              only: master
