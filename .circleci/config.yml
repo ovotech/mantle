@@ -13,6 +13,9 @@ jobs:
            name: goreleaser
            command: |
              export GITHUB_TOKEN=$GITHUB
+             go get -u github.com/jessevdk/go-flags
+             go get -u golang.org/x/oauth2/google
+             go get -u google.golang.org/api/cloudkms/v1
              curl -sL https://git.io/goreleaser | bash
 
     filters:
