@@ -2,7 +2,7 @@
 archive:
   format: binary
 builds:
-  - main: ./main.go
+  - main: ./
     goos:
       - windows
       - darwin
