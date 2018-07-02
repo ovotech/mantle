@@ -50,7 +50,7 @@ func (x *DecryptCommand) Execute(args []string) error {
 	nonce := cipherBytes[cipherLength-(dekLength+nonceLength) : cipherLength-dekLength]
 	decryptedDek := googleKMSCrypto(encryptedDek, defaultOptions.ProjectID,
 		defaultOptions.LocationID, defaultOptions.KeyRingID,
-		defaultOptions.CryptoKeyID, encrypt)
+		defaultOptions.CryptoKeyID, defaultOptions.KeyName, encrypt)
 	plainText := cipherText(cipherBytes[0:len(cipherBytes)-(dekLength+nonceLength)],
 		cipherblock(decryptedDek), nonce, encrypt)
 	ioutil.WriteFile(outputFilepath, plainText, fileMode)
