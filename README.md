@@ -62,6 +62,7 @@ Creates a new DEK, encrypts data with DEK, encrypts the DEK using KMS, spits out
 Application Options:
   -c, --cryptokeyId=  Google kms crytoKeyId
   -k, --keyringId=    Google kms keyRingId
+  -n, --keyName=      Google kms keyName
   -l, --locationId=   Google kms locationId
   -p, --projectId=    Google projectId
 
@@ -108,6 +109,7 @@ Decrypts the encrypted DEK via KMS, decrypts the data with the DEK, outputs to f
 Application Options:
   -c, --cryptokeyId=  Google kms crytoKeyId
   -k, --keyringId=    Google kms keyRingId
+  -n, --keyName=      Google kms keyName
   -l, --locationId=   Google kms locationId
   -p, --projectId=    Google projectId
 
