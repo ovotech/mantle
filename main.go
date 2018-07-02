@@ -17,10 +17,11 @@ import (
 
 //Defaults type defining input flags
 type Defaults struct {
-	CryptoKeyID string `short:"c" long:"cryptokeyId" description:"Google kms crytoKeyId" required:"true"`
-	KeyRingID   string `short:"k" long:"keyringId" description:"Google kms keyRingId" required:"true"`
-	LocationID  string `short:"l" long:"locationId" description:"Google kms locationId" required:"true"`
-	ProjectID   string `short:"p" long:"projectId" description:"Google projectId" required:"true"`
+	CryptoKeyID string `short:"c" long:"cryptokeyId" description:"Google kms crytoKeyId" required:"false"`
+	KeyRingID   string `short:"k" long:"keyringId" description:"Google kms keyRingId" required:"false"`
+	KeyName     string `short:"n" long:"keyName" description:"Google kms keyName" required:"false"`
+	LocationID  string `short:"l" long:"locationId" description:"Google kms locationId" required:"false"`
+	ProjectID   string `short:"p" long:"projectId" description:"Google projectId" required:"false"`
 }
 
 var defaultOptions = Defaults{}
@@ -54,11 +55,17 @@ func kmsClient() (kmsService *cloudkms.Service) {
 
 //googleKMSCrypto uses google kms to either encrypt or decrypt a byte slice
 func googleKMSCrypto(payload []byte, projectid, locationid, keyringid,
-	cryptokeyid string, encrypt bool) (resultText []byte) {
+	cryptokeyid, keyname string, encrypt bool) (resultText []byte) {
 	kmsService := kmsClient()
-	parentName := fmt.Sprintf(
-		"projects/%s/locations/%s/keyRings/%s/cryptoKeys/%s", projectid,
-		locationid, keyringid, cryptokeyid)
+	fmt.Println(keyname)
+	var parentName string
+	if len(keyname) > 0 {
+		parentName = keyname
+	} else {
+		parentName = fmt.Sprintf(
+			"projects/%s/locations/%s/keyRings/%s/cryptoKeys/%s", projectid,
+			locationid, keyringid, cryptokeyid)
+	}
 	if encrypt {
 		resultText = googleKMSEncrypt(payload, parentName, kmsService)
 	} else {

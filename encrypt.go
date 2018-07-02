@@ -43,7 +43,7 @@ func (x *EncryptCommand) Execute(args []string) error {
 	fileMode := os.FileMode.Perm(0644)
 	encryptedDek := googleKMSCrypto(dek, defaultOptions.ProjectID,
 		defaultOptions.LocationID, defaultOptions.KeyRingID,
-		defaultOptions.CryptoKeyID, encrypt)
+		defaultOptions.CryptoKeyID, defaultOptions.KeyName, encrypt)
 	cipherBytes := []byte(base64.StdEncoding.EncodeToString(append(
 		append(cipherText(dat, cipherblock(dek), nonce, encrypt),
 			nonce...),
