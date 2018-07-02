@@ -118,6 +118,7 @@ Help Options:
 
 [decrypt command options]
       -f, --filepath= Path of file to get encrypted string from (default: ./cipher.txt)
+      -v, --validate  Validate decryption works; don't produce a plain.txt
 ```
 
 ## ciphertext contents
