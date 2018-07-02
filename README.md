@@ -8,50 +8,6 @@ In short, plaintext is encrypted using a generated 256 bit AES "Data Encryption 
 
 Ciphertext is decrypted by following the same process in reverse. The DEK (obtained from ciphertext) is decrypted using KMS, then used, along with the nonce, to decrypt the 'data' section of the ciphertext. The resulting plaintext is given back to the user in a file.
 
-## how-to decrypt
-
-### pre-requisites:
-* `google credentials` on the host the aes-256-gcm-kms binary is run on, see [here](https://godoc.org/golang.org/x/oauth2/google#FindDefaultCredentials), that has kms decrypt permission
-* kms `cryptoKeyId`, `keyRingId`, `locationId` and `projectId` values
-* the `ciphertext` you want to decrypt in a file on the host you're invoking the binary from (defaults to ./cipher.txt)
-
-### `aes-256-gcm-kms decrypt` will:
-* split ciphertext into encrypted data, nonce and encrypted DEK
-* decrypts the encrypted DEK using KMS
-* decrypts the encrypted data using DEK and nonce
-* outputs to ./plain.txt
-* zerofills and deletes ciphertext file
-
-### example
-
-```
-$ aes-256-gcm-kms decrypt -c <cryptoKeyId> -k <keyringId> -l europe-west2 -p <projectId>
-Decrypting...
-Decryption successful, plaintext available at ./plain.txt
-Wiped 643 bytes from ./cipher.txt.
-```
-
-```
-$ aes-256-gcm-kms decrypt -h
-
-Usage:
-  aes-256-gcm-kms [OPTIONS] decrypt [decrypt-OPTIONS]
-
-Decrypts the encrypted DEK via KMS, decrypts the data with the DEK, outputs to file
-
-Application Options:
-  -c, --cryptokeyId=  Google kms crytoKeyId
-  -k, --keyringId=    Google kms keyRingId
-  -l, --locationId=   Google kms locationId
-  -p, --projectId=    Google projectId
-
-Help Options:
-  -h, --help          Show this help message
-
-[decrypt command options]
-      -f, --filepath= Path of file to get encrypted string from (default: ./cipher.txt)
-```
-
 ## how-to encrypt
 
 ### pre-requisites:
@@ -63,7 +19,9 @@ Help Options:
 * create a new DEK and a new nonce
 * encrypt data with DEK and nonce
 * encrypt DEK using KMS
-* outputs concatenated string of encrypted data, nonce and encrypted DEK. to command-line and ./cipher.txt
+* concatenates string of encrypted data, nonce and encrypted DEK. to command-line and ./cipher.txt
+* base64 encodes
+* outputs string to CLI and cipher.txt
 * zerofills and deletes plaintext file
 
 ### example
@@ -113,6 +71,51 @@ Help Options:
 [encrypt command options]
       -f, --filepath= Path of file to encrypt (default: ./plain.txt)
       -s, --singleLine  Disable use of newline chars in ciphertext
+```
+
+## how-to decrypt
+
+### pre-requisites:
+* `google credentials` on the host the aes-256-gcm-kms binary is run on, see [here](https://godoc.org/golang.org/x/oauth2/google#FindDefaultCredentials), that has kms decrypt permission
+* kms `cryptoKeyId`, `keyRingId`, `locationId` and `projectId` values
+* the `ciphertext` you want to decrypt in a file on the host you're invoking the binary from (defaults to ./cipher.txt)
+
+### `aes-256-gcm-kms decrypt` will:
+* base64 decodes
+* split ciphertext into encrypted data, nonce and encrypted DEK
+* decrypts the encrypted DEK using KMS
+* decrypts the encrypted data using DEK and nonce
+* outputs to ./plain.txt
+* zerofills and deletes ciphertext file
+
+### example
+
+```
+$ aes-256-gcm-kms decrypt -c <cryptoKeyId> -k <keyringId> -l europe-west2 -p <projectId>
+Decrypting...
+Decryption successful, plaintext available at ./plain.txt
+Wiped 643 bytes from ./cipher.txt.
+```
+
+```
+$ aes-256-gcm-kms decrypt -h
+
+Usage:
+  aes-256-gcm-kms [OPTIONS] decrypt [decrypt-OPTIONS]
+
+Decrypts the encrypted DEK via KMS, decrypts the data with the DEK, outputs to file
+
+Application Options:
+  -c, --cryptokeyId=  Google kms crytoKeyId
+  -k, --keyringId=    Google kms keyRingId
+  -l, --locationId=   Google kms locationId
+  -p, --projectId=    Google projectId
+
+Help Options:
+  -h, --help          Show this help message
+
+[decrypt command options]
+      -f, --filepath= Path of file to get encrypted string from (default: ./cipher.txt)
 ```
 
 ## ciphertext contents
