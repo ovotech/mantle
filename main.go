@@ -57,7 +57,6 @@ func kmsClient() (kmsService *cloudkms.Service) {
 func googleKMSCrypto(payload []byte, projectid, locationid, keyringid,
 	cryptokeyid, keyname string, encrypt bool) (resultText []byte) {
 	kmsService := kmsClient()
-	fmt.Println(keyname)
 	var parentName string
 	if len(keyname) > 0 {
 		parentName = keyname
