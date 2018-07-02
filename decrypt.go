@@ -20,6 +20,7 @@ func init() {
 //DecryptCommand type
 type DecryptCommand struct {
 	Filepath string `short:"f" long:"filepath" description:"Path of file to get encrypted string from" default:"./cipher.txt"`
+	Validate bool   `short:"v" long:"validate" description:"Validate decryption works; don't produce a plain.txt"`
 }
 
 var decryptCommand DecryptCommand
@@ -53,9 +54,13 @@ func (x *DecryptCommand) Execute(args []string) error {
 		defaultOptions.CryptoKeyID, defaultOptions.KeyName, encrypt)
 	plainText := cipherText(cipherBytes[0:len(cipherBytes)-(dekLength+nonceLength)],
 		cipherblock(decryptedDek), nonce, encrypt)
-	ioutil.WriteFile(outputFilepath, plainText, fileMode)
-	fmt.Printf("Decryption successful, plaintext available at %s\n",
-		outputFilepath)
-	check(zerofill(x.Filepath))
+	if x.Validate {
+		os.Exit(0)
+	} else {
+		ioutil.WriteFile(outputFilepath, plainText, fileMode)
+		fmt.Printf("Decryption successful, plaintext available at %s\n",
+			outputFilepath)
+		check(zerofill(x.Filepath))
+	}
 	return nil
 }
