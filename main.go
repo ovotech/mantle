@@ -123,10 +123,11 @@ func zerofill(filepath string) (err error) {
 			filepath+"\" as it's not a file")
 	} else {
 		zeroBytes := make([]byte, fileInfo.Size())
-		copy(zeroBytes[:], "0")
-		n, err := file.Write([]byte(zeroBytes))
+		n, err := file.Write(zeroBytes)
 		check(err)
 		fmt.Printf("Wiped %v bytes from %s.\n", n, filepath)
+		err = file.Close()
+		check(err)
 		err = os.Remove(filepath)
 		check(err)
 	}
