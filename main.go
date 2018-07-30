@@ -111,26 +111,39 @@ func randByteSlice(size int) (bytes []byte) {
 	return
 }
 
-//zerofill zerofills the desired file, and removes it
+//secureDelete zerofills the desired file, and removes it
+func secureDelete(filepath string) (err error) {
+	zerofill(filepath)
+	deleteFile(filepath)
+	return
+}
+
+//zerofill zerofills the desired file
 func zerofill(filepath string) (err error) {
-	file, err := os.OpenFile(filepath, os.O_RDWR, 0666)
+	fi, err := os.Stat(filepath)
 	check(err)
-	defer file.Close()
-	fileInfo, err := file.Stat()
-	check(err)
-	if fileInfo.IsDir() {
+	switch mode := fi.Mode(); {
+	case mode.IsDir():
 		fmt.Printf("%s\n", "Didn't zerofill/delete unencrypted file \""+
 			filepath+"\" as it's not a file")
-	} else {
+	case mode.IsRegular():
+		file, err := os.OpenFile(filepath, os.O_RDWR, 0666)
+		check(err)
+		defer file.Close()
+		fileInfo, err := file.Stat()
+		check(err)
 		zeroBytes := make([]byte, fileInfo.Size())
 		n, err := file.Write(zeroBytes)
 		check(err)
 		fmt.Printf("Wiped %v bytes from %s.\n", n, filepath)
-		err = file.Close()
-		check(err)
-		err = os.Remove(filepath)
-		check(err)
 	}
+	return
+}
+
+//delete file removes the file
+func deleteFile(filepath string) (err error) {
+	err = os.Remove(filepath)
+	check(err)
 	return
 }
 
