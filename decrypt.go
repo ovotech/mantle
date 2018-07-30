@@ -60,7 +60,7 @@ func (x *DecryptCommand) Execute(args []string) error {
 		ioutil.WriteFile(outputFilepath, plainText, fileMode)
 		fmt.Printf("Decryption successful, plaintext available at %s\n",
 			outputFilepath)
-		check(zerofill(x.Filepath))
+		check(secureDelete(x.Filepath))
 	}
 	return nil
 }
