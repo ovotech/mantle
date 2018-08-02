@@ -19,8 +19,9 @@ func init() {
 
 //DecryptCommand type
 type DecryptCommand struct {
-	Filepath string `short:"f" long:"filepath" description:"Path of file to get encrypted string from" default:"./cipher.txt"`
-	Validate bool   `short:"v" long:"validate" description:"Validate decryption works; don't produce a plain.txt"`
+	Filepath    string `short:"f" long:"filepath" description:"Path of file to get encrypted string from" default:"./cipher.txt"`
+	Validate    bool   `short:"v" long:"validate" description:"Validate decryption works; don't produce a plain.txt"`
+	WriteToFile bool   `short:"w" long:"writeToFile" description:"Toggles writing decrpytion to file or stdout"`
 }
 
 var decryptCommand DecryptCommand
@@ -31,7 +32,9 @@ var decryptCommand DecryptCommand
 // 3. Decrypts encrypted string from file using decrypted DEK
 // 4. Outputs decrypted result to file
 func (x *DecryptCommand) Execute(args []string) error {
-	fmt.Println("Decrypting...")
+	if x.WriteToFile {
+		fmt.Println("Decrypting...")
+	}
 	file, err := os.Open(x.Filepath)
 	check(err)
 	defer file.Close()
@@ -57,10 +60,16 @@ func (x *DecryptCommand) Execute(args []string) error {
 	if x.Validate {
 		os.Exit(0)
 	} else {
-		ioutil.WriteFile(outputFilepath, plainText, fileMode)
-		fmt.Printf("Decryption successful, plaintext available at %s\n",
-			outputFilepath)
-		check(secureDelete(x.Filepath))
+		if x.WriteToFile {
+			ioutil.WriteFile(outputFilepath, plainText, fileMode)
+		} else {
+			fmt.Printf("%s\n", plainText)
+		}
+
+		if x.WriteToFile {
+			fmt.Printf("Decryption successful, plaintext available at %s\n", outputFilepath)
+			check(secureDelete(x.Filepath))
+		}
 	}
 	return nil
 }
