@@ -19,12 +19,25 @@ func init() {
 
 //DecryptCommand type
 type DecryptCommand struct {
-	Filepath    string `short:"f" long:"filepath" description:"Path of file to get encrypted string from" default:"./cipher.txt"`
-	Validate    bool   `short:"v" long:"validate" description:"Validate decryption works; don't produce a plain.txt"`
-	WriteToFile bool   `short:"w" long:"writeToFile" description:"Toggles writing decrpytion to file or stdout"`
+	Filepath      string `short:"f" long:"filepath" description:"Path of file to get encrypted string from" default:"./cipher.txt"`
+	Validate      bool   `short:"v" long:"validate" description:"Validate decryption works; don't produce a plain.txt"`
+	WriteToStdout []bool `long:"stdout" description:"Writes decrypted to console"`
+	ReadFromStdIn []bool `long:"stdin" description:"Reads cipher text from stdin"`
 }
 
 var decryptCommand DecryptCommand
+
+func createScanner(x *DecryptCommand) *bufio.Scanner {
+	if len(x.ReadFromStdIn) > 0 {
+		return bufio.NewScanner(os.Stdin)
+	}
+	fmt.Println("Decrypting...")
+	file, err := os.Open(x.Filepath)
+	check(err)
+	defer file.Close()
+	return bufio.NewScanner(file)
+
+}
 
 //Execute executes the DecryptCommand:
 // 1. Obtains encrypted DEK from encrypted file
@@ -32,14 +45,18 @@ var decryptCommand DecryptCommand
 // 3. Decrypts encrypted string from file using decrypted DEK
 // 4. Outputs decrypted result to file
 func (x *DecryptCommand) Execute(args []string) error {
-	if x.WriteToFile {
-		fmt.Println("Decrypting...")
-	}
-	file, err := os.Open(x.Filepath)
-	check(err)
-	defer file.Close()
-	s := bufio.NewScanner(file)
+
 	var buffer bytes.Buffer
+	var s *bufio.Scanner
+	if len(x.ReadFromStdIn) > 0 {
+		s = bufio.NewScanner(os.Stdin)
+	} else {
+		fmt.Println("Decrypting " + x.Filepath)
+		file, err := os.Open(x.Filepath)
+		check(err)
+		defer file.Close()
+		s = bufio.NewScanner(file)
+	}
 	for s.Scan() {
 		buffer.WriteString(s.Text())
 	}
@@ -60,15 +77,14 @@ func (x *DecryptCommand) Execute(args []string) error {
 	if x.Validate {
 		os.Exit(0)
 	} else {
-		if x.WriteToFile {
+		if len(x.WriteToStdout) == 0 {
 			ioutil.WriteFile(outputFilepath, plainText, fileMode)
+			fmt.Printf("Decryption successful, plaintext available at %s\n", outputFilepath)
+			if len(x.ReadFromStdIn) == 0 {
+				check(secureDelete(x.Filepath))
+			}
 		} else {
 			fmt.Printf("%s\n", plainText)
-		}
-
-		if x.WriteToFile {
-			fmt.Printf("Decryption successful, plaintext available at %s\n", outputFilepath)
-			check(secureDelete(x.Filepath))
 		}
 	}
 	return nil
