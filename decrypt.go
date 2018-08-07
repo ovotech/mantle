@@ -21,23 +21,11 @@ func init() {
 type DecryptCommand struct {
 	Filepath      string `short:"f" long:"filepath" description:"Path of file to get encrypted string from" default:"./cipher.txt"`
 	Validate      bool   `short:"v" long:"validate" description:"Validate decryption works; don't produce a plain.txt"`
-	WriteToStdout []bool `long:"stdout" description:"Writes decrypted to console"`
-	ReadFromStdIn []bool `long:"stdin" description:"Reads cipher text from stdin"`
+	WriteToStdout []bool `short:"o" long:"stdout" description:"Writes decrypted plaintext to console"`
+	ReadFromStdIn []bool `short:"i" long:"stdin" description:"Reads ciphertext from stdin"`
 }
 
 var decryptCommand DecryptCommand
-
-func createScanner(x *DecryptCommand) *bufio.Scanner {
-	if len(x.ReadFromStdIn) > 0 {
-		return bufio.NewScanner(os.Stdin)
-	}
-	fmt.Println("Decrypting...")
-	file, err := os.Open(x.Filepath)
-	check(err)
-	defer file.Close()
-	return bufio.NewScanner(file)
-
-}
 
 //Execute executes the DecryptCommand:
 // 1. Obtains encrypted DEK from encrypted file
