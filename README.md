@@ -1,6 +1,6 @@
-# aes-256-gcm-kms
+# AES-256-GCM-KMS
 
-## intro
+## Intro
 
 A Go program to simplify the encryption & decryption of strings, using 256 bit [AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard) keys in [Galois/Counter Mode](https://en.wikipedia.org/wiki/Galois/Counter_Mode) (GCM), with cloud-based KMS services (currently only Google KMS) and multiple key layers (specifically [Envelope Encryption](https://cloud.google.com/kms/docs/envelope-encryption))
 
@@ -8,9 +8,9 @@ In short, plaintext is encrypted using a generated 256 bit AES "Data Encryption 
 
 Ciphertext is decrypted by following the same process in reverse. The DEK (obtained from ciphertext) is decrypted using KMS, then used, along with the nonce, to decrypt the 'data' section of the ciphertext. The resulting plaintext is given back to the user in a file.
 
-## how-to encrypt
+## How-to Encrypt
 
-### pre-requisites:
+### Pre-requisites:
 * `google credentials` on the host the aes-256-gcm-kms binary is run on, see [here](https://godoc.org/golang.org/x/oauth2/google#FindDefaultCredentials), that has kms encrypt permission
 * kms `cryptoKeyId`, `keyRingId`, `locationId` and `projectId` values
 * the `plaintext` you want to encrypt in a file on the host you're invoking the binary from (defaults to ./plain.txt)
@@ -24,7 +24,7 @@ Ciphertext is decrypted by following the same process in reverse. The DEK (obtai
 * outputs string to CLI and cipher.txt
 * zerofills and deletes plaintext file
 
-### example
+### Example
 
 ```
 $ aes-256-gcm-kms encrypt -c <cryptoKeyId> -k <keyringId> -l europe-west2 -p <projectId>
@@ -74,9 +74,9 @@ Help Options:
       -s, --singleLine  Disable use of newline chars in ciphertext
 ```
 
-## how-to decrypt
+## How-to Decrypt
 
-### pre-requisites:
+### Pre-requisites:
 * `google credentials` on the host the aes-256-gcm-kms binary is run on, see [here](https://godoc.org/golang.org/x/oauth2/google#FindDefaultCredentials), that has kms decrypt permission
 * kms `cryptoKeyId`, `keyRingId`, `locationId` and `projectId` values
 * the `ciphertext` you want to decrypt in a file on the host you're invoking the binary from (defaults to ./cipher.txt)
@@ -89,7 +89,7 @@ Help Options:
 * outputs to ./plain.txt
 * zerofills and deletes ciphertext file
 
-### example
+### Example
 
 ```
 $ aes-256-gcm-kms decrypt -c <cryptoKeyId> -k <keyringId> -l europe-west2 -p <projectId>
@@ -121,7 +121,7 @@ Help Options:
       -v, --validate  Validate decryption works; don't produce a plain.txt
 ```
 
-## ciphertext contents
+## Ciphertext Contents
 
 To clarify the contents of a ciphertext, after decoding (string length in brackets):
 
@@ -131,16 +131,14 @@ To clarify the contents of a ciphertext, after decoding (string length in bracke
 
 The encrypted DEK is 113 chars. This is the length of the string returned by Google KMS after it's been base64 decoded.
 
-## notes
+## Notes
 
-### newlines
+### Newlines
 
 When encrypting, newline chars are by default inserted into the ciphertext, every 40 chars. This is to play nicer with any max line lengths when storing in source code. This functionality can be disabled using the `-s, --singleLine` flag.
 
 So long as the decrypting process is only removing newline chars at the end of lines, it shouldn't need to differentiate the two 'modes'
 
-### nonce
+### Nonce
 
-Currently, there's no purpose to the nonce. An auto-generated nonce is included in the ciphertext, which can then be used by the decrypting process. Originally, the nonce was required as an input parameter by the user in both `encrypt` and `decrypt`, and wasn't stored in the ciphertext at all.
-
-There could be arguments for removing the nonce entirely (it doesn't really suit this kind of static file encryption), or resinstate it as a required user input parameter (at least for `decrypt`; it could still be auto-generated in `encrypt`).
+The 96-bit nonce serves the purpose of the IV.
