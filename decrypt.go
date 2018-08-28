@@ -39,7 +39,7 @@ func (x *DecryptCommand) Execute(args []string) error {
 	if len(x.ReadFromStdIn) > 0 {
 		s = bufio.NewScanner(os.Stdin)
 	} else {
-		fmt.Println("Decrypting " + x.Filepath)
+		// fmt.Println("Decrypting " + x.Filepath)
 		file, err := os.Open(x.Filepath)
 		check(err)
 		defer file.Close()
