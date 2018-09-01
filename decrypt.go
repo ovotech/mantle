@@ -21,8 +21,7 @@ func init() {
 type DecryptCommand struct {
 	Filepath      string `short:"f" long:"filepath" description:"Path of file to get encrypted string from" default:"./cipher.txt"`
 	Validate      bool   `short:"v" long:"validate" description:"Validate decryption works; don't produce a plain.txt"`
-	WriteToStdout []bool `short:"o" long:"stdout" description:"Writes decrypted plaintext to console"`
-	ReadFromStdIn []bool `short:"i" long:"stdin" description:"Reads ciphertext from stdin"`
+	WriteToStdout bool   `short:"o" long:"stdout" description:"Writes decrypted plaintext to console"`
 }
 
 var decryptCommand DecryptCommand
@@ -33,23 +32,20 @@ var decryptCommand DecryptCommand
 // 3. Decrypts encrypted string from file using decrypted DEK
 // 4. Outputs decrypted result to file
 func (x *DecryptCommand) Execute(args []string) error {
-
-	var buffer bytes.Buffer
-	var s *bufio.Scanner
-	if len(x.ReadFromStdIn) > 0 {
-		s = bufio.NewScanner(os.Stdin)
-	} else {
-		// fmt.Println("Decrypting " + x.Filepath)
-		file, err := os.Open(x.Filepath)
-		check(err)
-		defer file.Close()
-		s = bufio.NewScanner(file)
+	if !x.WriteToStdout {
+		fmt.Println("Decrypting...")
 	}
+	var err error
+	file, err := os.Open(x.Filepath)
+	check(err)
+	defer file.Close()
+	s := bufio.NewScanner(file)
+	var buffer bytes.Buffer
 	for s.Scan() {
 		buffer.WriteString(s.Text())
 	}
-	cipherBytes, errb := base64.StdEncoding.DecodeString(buffer.String())
-	check(errb)
+	cipherBytes, err := base64.StdEncoding.DecodeString(buffer.String())
+	check(err)
 	dekLength := 113
 	cipherLength := len(cipherBytes)
 	encrypt := false
@@ -63,17 +59,17 @@ func (x *DecryptCommand) Execute(args []string) error {
 	plainText := cipherText(cipherBytes[0:len(cipherBytes)-(dekLength+nonceLength)],
 		cipherblock(decryptedDek), nonce, encrypt)
 	if x.Validate {
+		fmt.Println("Validation completed successfully")
 		os.Exit(0)
-	} else {
-		if len(x.WriteToStdout) == 0 {
-			ioutil.WriteFile(outputFilepath, plainText, fileMode)
-			fmt.Printf("Decryption successful, plaintext available at %s\n", outputFilepath)
-			if len(x.ReadFromStdIn) == 0 {
-				check(secureDelete(x.Filepath))
-			}
-		} else {
-			fmt.Printf("%s\n", plainText)
-		}
 	}
-	return nil
+	if x.WriteToStdout {
+		fmt.Printf("%s\n", plainText)
+	} else {
+		err = ioutil.WriteFile(outputFilepath, plainText, fileMode)
+		check(err)
+		fmt.Printf("Decryption successful, plaintext available at %s\n",
+			outputFilepath)
+	}
+	check(secureDelete(x.Filepath))
+	return err
 }
