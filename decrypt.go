@@ -20,7 +20,7 @@ func init() {
 //DecryptCommand type
 type DecryptCommand struct {
 	Filepath      string `short:"f" long:"filepath" description:"Path of file to get encrypted string from" default:"./cipher.txt"`
-	Validate      bool   `short:"v" long:"validate" description:"Validate decryption works; don't produce a plain.txt"`
+	Validate      bool   `short:"v" long:"validate" description:"Validate decryption works"`
 	WriteToStdout bool   `short:"o" long:"stdout" description:"Writes decrypted plaintext to console"`
 }
 
