@@ -60,7 +60,7 @@ func (x *EncryptCommand) Execute(args []string) error {
 	ioutil.WriteFile(outputFilepath, cipherTexts, fileMode)
 	fmt.Printf("Encryption successful, ciphertext available at %s\n",
 		outputFilepath)
-	check(secureDelete(x.Filepath))
+	check(secureDelete(x.Filepath, false))
 	return nil
 }
 

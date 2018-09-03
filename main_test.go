@@ -15,7 +15,7 @@ func TestZerofill(t *testing.T) {
 	err := ioutil.WriteFile(path, d1, 0644)
 	check(err)
 
-	er := zerofill(path)
+	er := zerofill(path, false)
 	check(er)
 
 	dat, err := ioutil.ReadFile(path)
@@ -49,7 +49,7 @@ func TestSecureDelete(t *testing.T) {
 	err := ioutil.WriteFile(path, d1, 0644)
 	check(err)
 
-	er := secureDelete(path)
+	er := secureDelete(path, false)
 	check(er)
 
 	if _, err := os.Stat(path); err == nil {

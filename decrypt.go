@@ -19,9 +19,10 @@ func init() {
 
 //DecryptCommand type
 type DecryptCommand struct {
-	Filepath      string `short:"f" long:"filepath" description:"Path of file to get encrypted string from" default:"./cipher.txt"`
-	Validate      bool   `short:"v" long:"validate" description:"Validate decryption works"`
-	WriteToStdout bool   `short:"o" long:"stdout" description:"Writes decrypted plaintext to console"`
+	Filepath         string `short:"f" long:"filepath" description:"Path of file to get encrypted string from" default:"./cipher.txt"`
+	RetainCipherText bool   `short:"r" long:"retainCipherText" description:"Retain ciphertext after decryption"`
+	Validate         bool   `short:"v" long:"validate" description:"Validate decryption works"`
+	WriteToStdout    bool   `short:"o" long:"stdout" description:"Writes decrypted plaintext to console"`
 }
 
 var decryptCommand DecryptCommand
@@ -70,6 +71,8 @@ func (x *DecryptCommand) Execute(args []string) error {
 		fmt.Printf("Decryption successful, plaintext available at %s\n",
 			outputFilepath)
 	}
-	check(secureDelete(x.Filepath))
+	if !x.RetainCipherText {
+		check(secureDelete(x.Filepath, x.WriteToStdout))
+	}
 	return err
 }
