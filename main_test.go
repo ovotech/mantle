@@ -8,7 +8,7 @@ import (
 )
 
 func TestZerofill(t *testing.T) {
-	path := os.TempDir() + "/testFile"
+	path := os.TempDir() + "testFile"
 	defer os.Remove(path)
 
 	d1 := []byte("hello\ngo\n")
@@ -27,14 +27,8 @@ func TestZerofill(t *testing.T) {
 	}
 }
 
-func TestZerofillDir(t *testing.T) {
-	path, err := ioutil.TempDir("", "test")
-	check(err)
-	zerofill(path)
-}
-
 func TestDeleteFile(t *testing.T) {
-	path := os.TempDir() + "/testFile"
+	path := os.TempDir() + "testFile"
 
 	d1 := []byte("hello\ngo\n")
 	err := ioutil.WriteFile(path, d1, 0644)
@@ -49,7 +43,7 @@ func TestDeleteFile(t *testing.T) {
 }
 
 func TestSecureDelete(t *testing.T) {
-	path := os.TempDir() + "/testFile"
+	path := os.TempDir() + "testFile"
 
 	d1 := []byte("hello\ngo\n")
 	err := ioutil.WriteFile(path, d1, 0644)

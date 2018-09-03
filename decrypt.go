@@ -19,8 +19,9 @@ func init() {
 
 //DecryptCommand type
 type DecryptCommand struct {
-	Filepath string `short:"f" long:"filepath" description:"Path of file to get encrypted string from" default:"./cipher.txt"`
-	Validate bool   `short:"v" long:"validate" description:"Validate decryption works; don't produce a plain.txt"`
+	Filepath      string `short:"f" long:"filepath" description:"Path of file to get encrypted string from" default:"./cipher.txt"`
+	Validate      bool   `short:"v" long:"validate" description:"Validate decryption works"`
+	WriteToStdout bool   `short:"o" long:"stdout" description:"Writes decrypted plaintext to console"`
 }
 
 var decryptCommand DecryptCommand
@@ -31,7 +32,10 @@ var decryptCommand DecryptCommand
 // 3. Decrypts encrypted string from file using decrypted DEK
 // 4. Outputs decrypted result to file
 func (x *DecryptCommand) Execute(args []string) error {
-	fmt.Println("Decrypting...")
+	if !x.WriteToStdout {
+		fmt.Println("Decrypting...")
+	}
+	var err error
 	file, err := os.Open(x.Filepath)
 	check(err)
 	defer file.Close()
@@ -40,8 +44,8 @@ func (x *DecryptCommand) Execute(args []string) error {
 	for s.Scan() {
 		buffer.WriteString(s.Text())
 	}
-	cipherBytes, errb := base64.StdEncoding.DecodeString(buffer.String())
-	check(errb)
+	cipherBytes, err := base64.StdEncoding.DecodeString(buffer.String())
+	check(err)
 	dekLength := 113
 	cipherLength := len(cipherBytes)
 	encrypt := false
@@ -55,12 +59,17 @@ func (x *DecryptCommand) Execute(args []string) error {
 	plainText := cipherText(cipherBytes[0:len(cipherBytes)-(dekLength+nonceLength)],
 		cipherblock(decryptedDek), nonce, encrypt)
 	if x.Validate {
+		fmt.Println("Validation completed successfully")
 		os.Exit(0)
+	}
+	if x.WriteToStdout {
+		fmt.Printf("%s\n", plainText)
 	} else {
-		ioutil.WriteFile(outputFilepath, plainText, fileMode)
+		err = ioutil.WriteFile(outputFilepath, plainText, fileMode)
+		check(err)
 		fmt.Printf("Decryption successful, plaintext available at %s\n",
 			outputFilepath)
-		check(secureDelete(x.Filepath))
 	}
-	return nil
+	check(secureDelete(x.Filepath))
+	return err
 }
