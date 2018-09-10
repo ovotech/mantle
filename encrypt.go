@@ -47,7 +47,8 @@ func insertNewLines(cipherTexts []byte) (newLineText []byte) {
 	return
 }
 
-// CipherText returns a ciphertext from a slice of bytes (the plaintext)
+// CipherText creates a ciphertext encrypted from a slice of bytes
+// (the plaintext), and writes to File and Console.
 func CipherText(plaintext []byte, filepath string, singleLine bool) (err error) {
 	dekSize := 32
 	dek := randByteSlice(dekSize)
