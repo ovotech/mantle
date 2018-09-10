@@ -56,3 +56,16 @@ func TestSecureDelete(t *testing.T) {
 		t.Error("file still exists")
 	}
 }
+
+// func TestPlainText(t *testing.T) {
+// 	path := os.TempDir() + "plain.txt"
+// 	ciphertextLength := 125
+// 	b := make([]byte, ciphertextLength)
+//
+// 	s1 := base64.StdEncoding.EncodeToString(b)
+//
+// 	err := ioutil.WriteFile(path, []byte(s1), 0644)
+// 	fmt.Println(s1)
+// 	check(err)
+// 	PlainText(path)
+// }
