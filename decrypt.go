@@ -27,17 +27,35 @@ type DecryptCommand struct {
 
 var decryptCommand DecryptCommand
 
-//Execute executes the DecryptCommand:
-// 1. Obtains encrypted DEK from encrypted file
-// 2. Decrypts DEK using KMS
-// 3. Decrypts encrypted string from file using decrypted DEK
-// 4. Outputs decrypted result to file
+//Execute executes the DecryptCommand
 func (x *DecryptCommand) Execute(args []string) error {
 	if !x.WriteToStdout {
 		fmt.Println("Decrypting...")
 	}
-	var err error
-	file, err := os.Open(x.Filepath)
+	plaintext, err := PlainText(x.Filepath)
+	outputFilepath := "./plain.txt"
+	fileMode := os.FileMode.Perm(0644)
+	if x.Validate {
+		fmt.Println("Validation completed successfully")
+		os.Exit(0)
+	}
+	if x.WriteToStdout {
+		fmt.Printf("%s\n", plaintext)
+	} else {
+		err = ioutil.WriteFile(outputFilepath, plaintext, fileMode)
+		check(err)
+		fmt.Printf("Decryption successful, plaintext available at %s\n",
+			outputFilepath)
+	}
+	if !x.RetainCipherText {
+		check(secureDelete(x.Filepath, x.WriteToStdout))
+	}
+	return err
+}
+
+// PlainText returns a slice of bytes (the plaintext), decrypted from File
+func PlainText(filepath string) (plaintext []byte, err error) {
+	file, err := os.Open(filepath)
 	check(err)
 	defer file.Close()
 	s := bufio.NewScanner(file)
@@ -50,29 +68,12 @@ func (x *DecryptCommand) Execute(args []string) error {
 	dekLength := 113
 	cipherLength := len(cipherBytes)
 	encrypt := false
-	outputFilepath := "./plain.txt"
-	fileMode := os.FileMode.Perm(0644)
 	encryptedDek := cipherBytes[cipherLength-dekLength : cipherLength]
 	nonce := cipherBytes[cipherLength-(dekLength+nonceLength) : cipherLength-dekLength]
 	decryptedDek := googleKMSCrypto(encryptedDek, defaultOptions.ProjectID,
 		defaultOptions.LocationID, defaultOptions.KeyRingID,
 		defaultOptions.CryptoKeyID, defaultOptions.KeyName, encrypt)
-	plainText := cipherText(cipherBytes[0:len(cipherBytes)-(dekLength+nonceLength)],
+	plaintext = cipherText(cipherBytes[0:len(cipherBytes)-(dekLength+nonceLength)],
 		cipherblock(decryptedDek), nonce, encrypt)
-	if x.Validate {
-		fmt.Println("Validation completed successfully")
-		os.Exit(0)
-	}
-	if x.WriteToStdout {
-		fmt.Printf("%s\n", plainText)
-	} else {
-		err = ioutil.WriteFile(outputFilepath, plainText, fileMode)
-		check(err)
-		fmt.Printf("Decryption successful, plaintext available at %s\n",
-			outputFilepath)
-	}
-	if !x.RetainCipherText {
-		check(secureDelete(x.Filepath, x.WriteToStdout))
-	}
-	return err
+	return
 }
