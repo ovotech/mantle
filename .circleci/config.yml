@@ -13,16 +13,72 @@ jobs:
            name: goreleaser
            command: |
              export GITHUB_TOKEN=$GITHUB
-             go get -u github.com/jessevdk/go-flags
-             go get -u golang.org/x/oauth2/google
-             go get -u google.golang.org/api/cloudkms/v1
              curl -sL https://git.io/goreleaser | bash
 
-    filters:
-      tags:
-        only: /v[0-9]+(\.[0-9]+)*(-.*)*/
-      branches:
-        ignore: /.*/
+  go_fmt:
+    <<: *defaults
+
+    docker:
+    - image: eversc/go-pr-checks
+
+    steps:
+    - checkout
+
+    - run:
+        name: ensure gofmt
+        command: |
+          test -z $(gofmt -s -l $(find . -iname '*.go' -type f | grep -v /vendor/))
+  go_vet:
+    <<: *defaults
+
+    docker:
+    - image: eversc/go-pr-checks
+
+    steps:
+    - checkout
+
+    - run:
+        name: go vet
+        command: go vet ./...
+
+  go_cyclo:
+    <<: *defaults
+
+    docker:
+    - image: eversc/go-pr-checks
+
+    steps:
+    - checkout
+
+    - run:
+        name: go_cyclo
+        command: gocyclo -over 6 cmd utils
+
+  go_lint:
+    <<: *defaults
+
+    docker:
+    - image: eversc/go-pr-checks
+
+    steps:
+    - checkout
+
+    - run:
+        name: golint
+        command: golint -set_exit_status $(go list ./...)
+
+  go_build:
+    <<: *defaults
+
+    docker:
+    - image: eversc/go-pr-checks
+
+    steps:
+    - checkout
+
+    - run:
+        name: go build
+        command: go build
 
 workflows:
   version: 2
@@ -34,3 +90,25 @@ workflows:
               only: /v[0-9]+(\.[0-9]+)*(-.*)*/
             branches:
               ignore: /.*/
+  pr_pipeline:
+    jobs:
+    - go_fmt:
+        filters:
+          branches:
+            ignore: master
+    - go_vet:
+        filters:
+          branches:
+            ignore: master
+    - go_cyclo:
+        filters:
+          branches:
+            ignore: master
+    - go_lint:
+        filters:
+          branches:
+            ignore: master
+    - go_build:
+        filters:
+          branches:
+            ignore: master
