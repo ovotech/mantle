@@ -21,6 +21,7 @@ func init() {
 type DecryptCommand struct {
 	Filepath         string `short:"f" long:"filepath" description:"Path of file to get encrypted string from" default:"./cipher.txt"`
 	RetainCipherText bool   `short:"r" long:"retainCipherText" description:"Retain ciphertext after decryption"`
+	TargetFilepath   string `short:"t" long:"targetFilepath" description:"Path of file to write decrypted string to" default:"./plain.txt"`
 	Validate         bool   `short:"v" long:"validate" description:"Validate decryption works"`
 	WriteToStdout    bool   `short:"o" long:"stdout" description:"Writes decrypted plaintext to console"`
 }
@@ -33,7 +34,7 @@ func (x *DecryptCommand) Execute(args []string) error {
 		fmt.Println("Decrypting...")
 	}
 	plaintext, err := PlainText(x.Filepath)
-	outputFilepath := "./plain.txt"
+	outputFilepath := x.TargetFilepath
 	fileMode := os.FileMode.Perm(0644)
 	if x.Validate {
 		fmt.Println("Validation completed successfully")
