@@ -41,9 +41,9 @@ You'll need to [create a Key Ring and Key](https://cloud.google.com/kms/docs/cre
 
 ### Authorisation
 
-If you have `gcloud` set up locally, and you have the Cloud KMS CryptoKey
-Encrypter and/or Decrypter Role(s), the tool will already be able to
-encrypt/decrypt.
+If you have `gcloud` set up locally, and your user has the `Cloud KMS CryptoKey
+Encrypter` and/or `Cloud KMS CryptoKey Decrypter` Role(s), the tool will
+already be able to encrypt/decrypt.
 
 If you're running the binary in an automated way (i.e. with a Service Account):
 
