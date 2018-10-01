@@ -52,7 +52,7 @@ Decrypter Role(s
 * Drop the Service Account's key.json onto the host you're running the tool on
 * Set the `GOOGLE_APPLICATION_CREDENTIALS` env var as the path of the key.json
 
-### Obtain The Key's Resource Id
+### Obtain The Key's Resource ID
 
 The final piece of the puzzle is obtaining the name of the KMS Key the tool is
 going to use.
@@ -67,9 +67,21 @@ $ gcloud kms keyrings list --location <location>
 $ gcloud kms keys list --location <location> --keyring <keyring_name>
 ```
 
-The `NAME` value returned by the last command is Google's `ResourceId` for the
+The `NAME` value returned by the last command is Google's `Resource ID` for the
 Key. It's this value that you can give to the `aes-256-gcm-kms` binary in the
 `-n,--keyName` flag, to get it to work.
+
+Alternatively to using `gcloud` you can get the Resource ID from the [Google Cloud Console](https://console.cloud.google.com/security/kms); click on the KeyRing
+you want to use, and select "Copy Resource ID" from the menu to the right of the
+correct Key.
+
+
+The key name string can be pretty long, as there's various things being
+referenced within them. It will be in the following format:
+
+```
+projects/<project_name>/locations/<location>/keyRings/<keyring_name>/cryptoKeys/<key_name>
+```
 
 To test this out, you should be able to:
 
@@ -80,6 +92,9 @@ $ echo "helloworld" > plain.txt
 # issue the encrypt command. The binary should output to command line the
 # encrypted string, remove the plain.txt file, and create a cipher.txt file
 $ aes-256-gcm-kms encrypt -n <key_name>
+
+# take a look at the cipher.txt
+$ cat cipher.txt
 
 # now we can decrypt back again, you should be left with a new plain.txt
 $ aes-256-gcm-kms decrypt -n <key_name>
