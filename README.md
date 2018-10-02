@@ -144,6 +144,16 @@ lines, it shouldn't need to differentiate the two 'modes'
 
 The 96-bit nonce serves the purpose of the IV.
 
+### Zero-fill and Delete
+
+By default, when performing either `encrypt` or `decrypt` commands, the tool
+will zero-fill and delete the source file, so plain.txt or cipher.txt (or an
+overriding filepath you've set) respectively.
+
+When decrypting, you can use the `-r,--retainCipherText` flag in order to
+retain the ciphertext file. There's no option to retain the source file when
+encrypting.
+
 
 ## Example
 
@@ -176,3 +186,8 @@ Wiped 340 bytes from ./plain.txt.
 Your ciphertext is the string between (not including) the `BEGIN` and `END`
 markers. The resulting `cipher.txt` file will only contain the ciphertext
 string.
+
+
+## Contributing
+
+Contributions are very welcome, please fork or branch and raise a PR.
