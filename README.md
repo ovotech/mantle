@@ -162,7 +162,7 @@ $ aes-256-gcm-kms encrypt -n <key_name>
 
 Encrypting...
 -----BEGIN (ENCRYPTED DATA + DEK) STRING-----
-***REMOVED***
+y+PvJrf0QJKKSp85C0MN6q2v7EhMeorNJG+5FLiN
 wV/Wow6eWHFL80x3xl7vIgDVN5CdRAOVpZL2kJV3
 coDbctszL5LJHaLL22YVYaJwojETz5Aff4Kss98p
 MIRahCJ1D8EFNoBbTAQTUGNJAJGc11YcX3sWpsYB
