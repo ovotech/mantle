@@ -48,7 +48,7 @@ func (x *DecryptCommand) Execute(args []string) error {
 		fmt.Println("Decrypting...")
 	}
 	plaintext, err := PlainText(x.Filepath)
-	CheckCipherTextLength(plaintext)
+	checkCipherTextLength(plaintext)
 	outputFilepath := x.TargetFilepath
 	fileMode := os.FileMode.Perm(0644)
 	if x.Validate {
@@ -69,7 +69,7 @@ func (x *DecryptCommand) Execute(args []string) error {
 	return err
 }
 
-func CheckCipherTextLength(plaintext []byte) {
+func checkCipherTextLength(plaintext []byte) {
 	if len(plaintext) < 124 {
 		panic("CipherText was shorter than the smallest possible generated CipherText")
 	}

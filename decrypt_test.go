@@ -27,6 +27,6 @@ func TestMinimumCipherTextLength(t *testing.T) {
 
 	plaintext := []byte("I'm Very Short")
 
-	CheckCipherTextLength(plaintext)
+	checkCipherTextLength(plaintext)
 
 }
