@@ -16,13 +16,13 @@ Darwin, Linux and Windows Binaries can be downloaded from [the Releases page](ht
 
 Try it out:
 
-```
+```bash
 $ aes-256-gcm-kms -h
 ```
 
 ### From Source
 
-```
+```bash
 $ git clone git@github.com:ovotech/aes-256-gcm-kms.git
 
 $ cd aes-256-gcm-kms
@@ -30,6 +30,12 @@ $ cd aes-256-gcm-kms
 $ go build
 
 $ ./aes-256-gcm-kms -h
+```
+
+### As A Dependency
+
+```Go
+go get -u github.com/ovotech/aes-256-gcm-kms
 ```
 
 ## Getting Started
@@ -59,7 +65,7 @@ going to use.
 
 Using `gcloud`, you can do this by issuing:
 
-```
+```bash
 # get the name of the Keyring that 'holds' the required Key
 $ gcloud kms keyrings list --location <location>
 
@@ -85,7 +91,7 @@ projects/<project_name>/locations/<location>/keyRings/<keyring_name>/cryptoKeys/
 
 To test this out, you should be able to:
 
-```
+```bash
 # create plain.text
 $ echo "helloworld" > plain.txt
 
@@ -157,7 +163,7 @@ encrypting.
 
 ## Example
 
-```
+```bash
 $ aes-256-gcm-kms encrypt -n <key_name>
 
 Encrypting...
