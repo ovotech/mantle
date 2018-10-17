@@ -32,6 +32,12 @@ $ go build
 $ ./aes-256-gcm-kms -h
 ```
 
+### As a Go Dependency
+
+```Go
+$ go get -u github.com/ovotech/aes-256-gcm-kms
+```
+
 ## Getting Started
 
 ### GCP
