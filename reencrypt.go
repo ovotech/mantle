@@ -34,11 +34,16 @@ type ReencryptCommand struct {
 
 var reencryptCommand ReencryptCommand
 
-//Execute executes the ReencryptCommand:
+//Execute executes the ReencryptCommand
 func (x *ReencryptCommand) Execute(args []string) error {
 	fmt.Println("Reencrypting...")
-	plaintext, err := PlainText(x.Filepath)
+	return Reencrypt(x.Filepath, x.SingleLine)
+}
+
+//Reencrypt decrypts into a plaintext byte array, and encrypts back to ciphertext file
+func Reencrypt(filepath string, singleLine bool) error {
+	plaintext, err := PlainText(filepath)
 	check(err)
-	err = CipherText(plaintext, x.Filepath, x.SingleLine)
+	err = CipherText(plaintext, filepath, singleLine)
 	return err
 }
