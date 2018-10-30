@@ -166,16 +166,6 @@ func deleteFile(filepath string) (err error) {
 	return
 }
 
-// func main() {
-// 	if _, err := parser.Parse(); err != nil {
-// 		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
-// 			os.Exit(0)
-// 		} else {
-// 			os.Exit(1)
-// 		}
-// 	}
-// }
-
 //cipherblock creates and returns a new aes cipher.Block
 func cipherblock(dek []byte) (cipherblock cipher.Block) {
 	cipherblock, err := aes.NewCipher(dek)
