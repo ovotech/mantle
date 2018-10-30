@@ -24,7 +24,7 @@ import (
 func init() {
 	//defaultOptions := Defaults{}
 	//parser := flags.NewParser(&defaultOptions, flags.Default)
-	parser.AddCommand("encrypt",
+	Parser.AddCommand("encrypt",
 		"Encrypts your data, returning everything required for future decryption",
 		"Creates a new DEK, encrypts data with DEK, encrypts the DEK using KMS, "+
 			"spits out encrypted data + encrypted DEK.",
@@ -49,7 +49,7 @@ func (x *EncryptCommand) Execute(args []string) (err error) {
 	return err
 }
 
-// insertNewLines inserts a newline char at specific intervals
+//insertNewLines inserts a newline char at specific intervals
 func insertNewLines(cipherTexts []byte) (newLineText []byte) {
 	interval := 40
 	for i, char := range cipherTexts {
@@ -61,35 +61,36 @@ func insertNewLines(cipherTexts []byte) (newLineText []byte) {
 	return
 }
 
-// CipherText creates a ciphertext encrypted from a slice of bytes
-// (the plaintext), and writes to File and Console.
+//CipherText creates a ciphertext encrypted from a slice of bytes
+//(the plaintext), and writes to File and Console.
 func CipherText(plaintext []byte, filepath string, singleLine bool) (err error) {
+	outputFilepath := "./cipher.txt"
+	fileMode := os.FileMode.Perm(0644)
+	cipherBytes := CipherBytes(plaintext, singleLine)
+	fmt.Println("-----BEGIN (ENCRYPTED DATA + DEK) STRING-----")
+	fmt.Printf("%s\n", cipherBytes)
+	fmt.Println("-----END (ENCRYPTED DATA + DEK) STRING-----")
+	ioutil.WriteFile(outputFilepath, cipherBytes, fileMode)
+	fmt.Printf("Encryption successful, ciphertext available at %s\n",
+		outputFilepath)
+	return
+}
+
+//CipherBytes encrypts plaintext bytes and returns ciphertext bytes
+func CipherBytes(plaintext []byte, singleLine bool) (cipherBytes []byte) {
 	dekSize := 32
 	dek := randByteSlice(dekSize)
 	nonce := randByteSlice(nonceLength)
-	check(err)
 	encrypt := true
 	encryptedDek := googleKMSCrypto(dek, defaultOptions.ProjectID,
 		defaultOptions.LocationID, defaultOptions.KeyRingID,
 		defaultOptions.CryptoKeyID, defaultOptions.KeyName, encrypt)
-	cipherBytes := []byte(base64.StdEncoding.EncodeToString(append(
+	cipherBytes = []byte(base64.StdEncoding.EncodeToString(append(
 		append(cipherText(plaintext, cipherblock(dek), nonce, encrypt),
 			nonce...),
 		encryptedDek...)))
-	check(err)
-	var cipherTexts []byte
-	if singleLine {
-		cipherTexts = cipherBytes
-	} else {
-		cipherTexts = insertNewLines(cipherBytes)
+	if !singleLine {
+		cipherBytes = insertNewLines(cipherBytes)
 	}
-	outputFilepath := "./cipher.txt"
-	fileMode := os.FileMode.Perm(0644)
-	fmt.Println("-----BEGIN (ENCRYPTED DATA + DEK) STRING-----")
-	fmt.Printf("%s\n", cipherTexts)
-	fmt.Println("-----END (ENCRYPTED DATA + DEK) STRING-----")
-	ioutil.WriteFile(outputFilepath, cipherTexts, fileMode)
-	fmt.Printf("Encryption successful, ciphertext available at %s\n",
-		outputFilepath)
 	return
 }

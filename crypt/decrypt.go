@@ -24,7 +24,7 @@ import (
 )
 
 func init() {
-	parser.AddCommand("decrypt",
+	Parser.AddCommand("decrypt",
 		"Decrypts encrypted text, returning the plaintext data",
 		"Decrypts the encrypted DEK via KMS, decrypts the data with the DEK, "+
 			"outputs to file",
