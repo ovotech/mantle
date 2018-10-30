@@ -1,5 +1,4 @@
-# AES-256-GCM-KMS
-
+# Mantle
 This is a Go program to simplify the encryption & decryption of byte arrays,
 using 256 bit [AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard)
 keys in [Galois/Counter Mode](https://en.wikipedia.org/wiki/Galois/Counter_Mode)
@@ -12,30 +11,30 @@ key layers (specifically
 
 ### From Binary Releases
 
-Darwin, Linux and Windows Binaries can be downloaded from [the Releases page](https://github.com/ovotech/aes-256-gcm-kms/releases).
+Darwin, Linux and Windows Binaries can be downloaded from [the Releases page](https://github.com/ovotech/mantle/releases).
 
 Try it out:
 
 ```
-$ aes-256-gcm-kms -h
+$ mantle -h
 ```
 
 ### From Source
 
 ```
-$ git clone git@github.com:ovotech/aes-256-gcm-kms.git
+$ git clone git@github.com:ovotech/mantle.git
 
-$ cd aes-256-gcm-kms
+$ cd mantle
 
 $ go build
 
-$ ./aes-256-gcm-kms -h
+$ ./mantle -h
 ```
 
 ### As a Go Dependency
 
 ```Go
-$ go get -u github.com/ovotech/aes-256-gcm-kms
+$ go get -u github.com/ovotech/mantle
 ```
 
 ## Getting Started
@@ -74,7 +73,7 @@ $ gcloud kms keys list --location <location> --keyring <keyring_name>
 ```
 
 The `NAME` value returned by the last command is Google's `Resource ID` for the
-Key. It's this value that you can give to the `aes-256-gcm-kms` binary in the
+Key. It's this value that you can give to the `mantle` binary in the
 `-n,--keyName` flag, to get it to work.
 
 Alternatively to using `gcloud` you can get the Resource ID from the [Google Cloud Console](https://console.cloud.google.com/security/kms); click on the KeyRing
@@ -97,13 +96,13 @@ $ echo "helloworld" > plain.txt
 
 # issue the encrypt command. The binary should output to command line the
 # encrypted string, remove the plain.txt file, and create a cipher.txt file
-$ aes-256-gcm-kms encrypt -n <key_name>
+$ mantle encrypt -n <key_name>
 
 # take a look at the cipher.txt
 $ cat cipher.txt
 
 # now we can decrypt back again, you should be left with a new plain.txt
-$ aes-256-gcm-kms decrypt -n <key_name>
+$ mantle decrypt -n <key_name>
 
 $ cat plain.txt
 ```
@@ -164,7 +163,7 @@ encrypting.
 ## Example
 
 ```
-$ aes-256-gcm-kms encrypt -n <key_name>
+$ mantle encrypt -n <key_name>
 
 Encrypting...
 -----BEGIN (ENCRYPTED DATA + DEK) STRING-----
