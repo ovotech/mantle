@@ -1,8 +1,9 @@
 package main
 
 import (
-	"mantle/crypt"
 	"os"
+
+	"github.com/ovotech/mantle/crypt"
 
 	flags "github.com/jessevdk/go-flags"
 )
