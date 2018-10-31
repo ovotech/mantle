@@ -40,7 +40,8 @@ type Defaults struct {
 
 var defaultOptions = Defaults{}
 
-var parser = flags.NewParser(&defaultOptions, flags.Default)
+//Parser is a new Parser with default options
+var Parser = flags.NewParser(&defaultOptions, flags.Default)
 
 var nonceLength = 12
 
@@ -163,16 +164,6 @@ func deleteFile(filepath string) (err error) {
 	err = os.Remove(filepath)
 	check(err)
 	return
-}
-
-func main() {
-	if _, err := parser.Parse(); err != nil {
-		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
-			os.Exit(0)
-		} else {
-			os.Exit(1)
-		}
-	}
 }
 
 //cipherblock creates and returns a new aes cipher.Block

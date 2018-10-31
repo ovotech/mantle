@@ -1,5 +1,5 @@
 defaults: &defaults
-  working_directory: /go/src/github.com/ovotech/helm-bulk
+  working_directory: /go/src/github.com/ovotech/mantle
 
 version: 2
 jobs:
