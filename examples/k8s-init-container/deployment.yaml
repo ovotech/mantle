@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mantle
+  labels:
+    app: mantle
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mantle
+  template:
+    metadata:
+      labels:
+        app: mantle
+    spec:
+      initContainers:
+      - name: mantle-init
+        image: ovotech/mantle
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/google/key.json
+          # see https://github.com/ovotech/mantle#obtain-the-keys-resource-id
+          # for obtaining the KMS_KEY resource Id
+        - name: KMS_KEY
+          valueFrom:
+            configMapKeyRef:
+              name: kms-key
+              key: resource.id
+        - name: CONFIG_SOURCE
+          value: /etc/config/cipher.txt
+        - name: CONFIG_TARGET
+          value: /etc/decrypted/banksy.txt
+        command: ["sh"]
+        args: ["-c", "mantle decrypt -n $KMS_KEY -r -f $CONFIG_SOURCE -t $CONFIG_TARGET"]
+        volumeMounts:
+        - mountPath: /etc/decrypted
+          name: decrypted-volume
+        - mountPath: /var/secrets/google
+          name: google-cloud-key
+        - mountPath: /etc/config
+          name: config-volume
+      containers:
+      - name: app-container
+        image: alpine
+        env:
+        - name: ENV
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: APP_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        # Just spin & wait forever
+        command: [ 'sh', '-c', '--' ]
+        args: [ "while true; do sleep 30; done;" ]
+        volumeMounts:
+        - mountPath: /etc/decrypted
+          name: decrypted-volume
+      volumes:
+      - name: decrypted-volume
+        emptyDir:
+          medium: Memory
+      - name: config-volume
+        configMap:
+          name: mantle-config
+      - name: google-cloud-key
+        secret:
+          secretName: kms-key
