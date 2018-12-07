@@ -35,7 +35,7 @@ $ kubectl exec -it $(kubectl get pods --selector=app=mantle \
 
 # delete the resources when you're done
 $ kubectl delete configmap mantle-config \
-    && kubectl delete configmap mantle-kms-key
+    && kubectl delete configmap mantle-kms-key \
     && kubectl delete deployment mantle
 ```
 
