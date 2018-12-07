@@ -25,7 +25,7 @@ spec:
         - name: KMS_KEY
           valueFrom:
             configMapKeyRef:
-              name: kms-key
+              name: mantle-kms-key
               key: resource.id
         - name: CONFIG_SOURCE
           value: /etc/config/cipher.txt
