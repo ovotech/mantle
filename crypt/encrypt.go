@@ -76,13 +76,15 @@ func CipherText(plaintext []byte, filepath string, singleLine bool) (err error) 
 	return
 }
 
-//CipherBytes encrypts plaintext bytes and returns ciphertext bytes
+//CipherBytes uses 'defaultOptions' go-flags to encrypt plaintext bytes and
+//return ciphertext bytes
 func CipherBytes(plaintext []byte, singleLine bool) (cipherBytes []byte) {
 	return CipherBytesFromPrimitives(plaintext, singleLine, defaultOptions.ProjectID,
 		defaultOptions.LocationID, defaultOptions.KeyRingID,
 		defaultOptions.CryptoKeyID, defaultOptions.KeyName)
 }
 
+//CipherBytesFromPrimitives encrypts plaintext bytes and returns ciphertext bytes
 func CipherBytesFromPrimitives(plaintext []byte, singleLine bool, projectID,
 	locationID, keyRingID, cryptoKeyID, keyName string) (cipherBytes []byte) {
 	dekSize := 32
