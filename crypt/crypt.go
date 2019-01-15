@@ -44,6 +44,8 @@ var defaultOptions = Defaults{}
 var Parser = flags.NewParser(&defaultOptions, flags.Default)
 
 var nonceLength = 12
+var dekLength = 32
+var encDekLength = 113
 
 //check panics if error is not nil
 func check(e error) {

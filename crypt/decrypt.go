@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 )
 
 func init() {
@@ -48,7 +49,6 @@ func (x *DecryptCommand) Execute(args []string) error {
 		fmt.Println("Decrypting...")
 	}
 	plaintext, err := PlainText(x.Filepath)
-	checkCipherTextLength(plaintext)
 	outputFilepath := x.TargetFilepath
 	fileMode := os.FileMode.Perm(0644)
 	if x.Validate {
@@ -69,9 +69,13 @@ func (x *DecryptCommand) Execute(args []string) error {
 	return err
 }
 
-func checkCipherTextLength(plaintext []byte) {
-	if len(plaintext) < 124 {
-		panic("CipherText was shorter than the smallest possible generated CipherText")
+func checkCipherTextLength(plaintext []byte, filepath string) {
+	length := len(plaintext)
+	minLength := encDekLength + nonceLength
+	if length < minLength {
+		panic("CipherText (" + filepath + ") was shorter (" + strconv.Itoa(length) +
+			") than the smallest possible generated CipherText (" +
+			strconv.Itoa(minLength) + ")")
 	}
 }
 
@@ -87,15 +91,15 @@ func PlainText(filepath string) (plaintext []byte, err error) {
 	}
 	cipherBytes, err := base64.StdEncoding.DecodeString(buffer.String())
 	check(err)
-	dekLength := 113
+	checkCipherTextLength(cipherBytes, filepath)
 	cipherLength := len(cipherBytes)
 	encrypt := false
-	encryptedDek := cipherBytes[cipherLength-dekLength : cipherLength]
-	nonce := cipherBytes[cipherLength-(dekLength+nonceLength) : cipherLength-dekLength]
+	encryptedDek := cipherBytes[cipherLength-encDekLength : cipherLength]
+	nonce := cipherBytes[cipherLength-(encDekLength+nonceLength) : cipherLength-encDekLength]
 	decryptedDek := googleKMSCrypto(encryptedDek, defaultOptions.ProjectID,
 		defaultOptions.LocationID, defaultOptions.KeyRingID,
 		defaultOptions.CryptoKeyID, defaultOptions.KeyName, encrypt)
-	plaintext = cipherText(cipherBytes[0:len(cipherBytes)-(dekLength+nonceLength)],
+	plaintext = cipherText(cipherBytes[0:len(cipherBytes)-(encDekLength+nonceLength)],
 		cipherblock(decryptedDek), nonce, encrypt)
 	return
 }
