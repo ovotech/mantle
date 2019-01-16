@@ -26,7 +26,8 @@ func TestMinimumCipherTextLength(t *testing.T) {
 	}()
 
 	plaintext := []byte("I'm Very Short")
+	filepath := "./plain.txt"
 
-	checkCipherTextLength(plaintext)
+	checkCipherTextLength(plaintext, filepath)
 
 }

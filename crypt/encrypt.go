@@ -87,8 +87,7 @@ func CipherBytes(plaintext []byte, singleLine bool) (cipherBytes []byte) {
 //CipherBytesFromPrimitives encrypts plaintext bytes and returns ciphertext bytes
 func CipherBytesFromPrimitives(plaintext []byte, singleLine bool, projectID,
 	locationID, keyRingID, cryptoKeyID, keyName string) (cipherBytes []byte) {
-	dekSize := 32
-	dek := randByteSlice(dekSize)
+	dek := randByteSlice(dekLength)
 	nonce := randByteSlice(nonceLength)
 	encrypt := true
 	encryptedDek := googleKMSCrypto(dek, projectID, locationID, keyRingID,
