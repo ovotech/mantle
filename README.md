@@ -145,9 +145,20 @@ flag.
 So long as the decrypting process is only removing newline chars at the end of
 lines, it shouldn't need to differentiate the two 'modes'
 
-### Nonce
+### IV
 
-The 96-bit nonce serves the purpose of the IV.
+Mantle uses the [crypto/rand](https://golang.org/pkg/crypto/rand/) Reader to
+generate a new IV every time the `encrypt` command is called.
+
+
+*"Reader is a global, shared instance of a cryptographically secure random number generator.*
+
+*On Linux, Reader uses getrandom(2) if available, /dev/urandom otherwise. On
+OpenBSD, Reader uses getentropy(2). On other Unix-like systems, Reader reads
+from /dev/urandom. On Windows systems, Reader uses the CryptGenRandom API. On
+Wasm, Reader uses the Web Crypto API."*
+
+96 bits (12 bytes), the length of the IV, are read from this Reader.
 
 ### Zero-fill and Delete
 
