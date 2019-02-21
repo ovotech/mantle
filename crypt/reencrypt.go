@@ -28,8 +28,9 @@ func init() {
 
 //ReencryptCommand type
 type ReencryptCommand struct {
-	Filepath   string `short:"f" long:"filepath" description:"Path of file to get encrypted string from" default:"./cipher.txt"`
-	SingleLine bool   `short:"s" long:"singleLine" description:"Disable use of newline chars in ciphertext"`
+	DisableValidation bool   `short:"d" long:"disableValidation" description:"Disable validation of ciphertext"`
+	Filepath          string `short:"f" long:"filepath" description:"Path of file to get encrypted string from" default:"./cipher.txt"`
+	SingleLine        bool   `short:"s" long:"singleLine" description:"Disable use of newline chars in ciphertext"`
 }
 
 var reencryptCommand ReencryptCommand
@@ -37,13 +38,13 @@ var reencryptCommand ReencryptCommand
 //Execute executes the ReencryptCommand
 func (x *ReencryptCommand) Execute(args []string) error {
 	fmt.Println("Reencrypting...")
-	return Reencrypt(x.Filepath, x.SingleLine)
+	return Reencrypt(x.Filepath, x.SingleLine, x.DisableValidation)
 }
 
 //Reencrypt decrypts into a plaintext byte array, and encrypts back to ciphertext file
-func Reencrypt(filepath string, singleLine bool) error {
+func Reencrypt(filepath string, singleLine, disableValidation bool) error {
 	plaintext, err := PlainText(filepath)
 	check(err)
-	err = CipherText(plaintext, filepath, singleLine)
+	err = CipherText(plaintext, filepath, singleLine, disableValidation)
 	return err
 }

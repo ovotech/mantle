@@ -24,10 +24,6 @@ func TestMinimumCipherTextLength(t *testing.T) {
 			t.Errorf("The code did not panic")
 		}
 	}()
-
 	plaintext := []byte("I'm Very Short")
-	filepath := "./plain.txt"
-
-	checkCipherTextLength(plaintext, filepath)
-
+	checkCipherTextLength(plaintext)
 }

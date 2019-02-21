@@ -69,11 +69,11 @@ func (x *DecryptCommand) Execute(args []string) error {
 	return err
 }
 
-func checkCipherTextLength(plaintext []byte, filepath string) {
-	length := len(plaintext)
+func checkCipherTextLength(ciphertext []byte) {
+	length := len(ciphertext)
 	minLength := encDekLength + nonceLength
 	if length < minLength {
-		panic("CipherText (" + filepath + ") was shorter (" + strconv.Itoa(length) +
+		panic("CipherText was shorter (" + strconv.Itoa(length) +
 			") than the smallest possible generated CipherText (" +
 			strconv.Itoa(minLength) + ")")
 	}
@@ -91,7 +91,14 @@ func PlainText(filepath string) (plaintext []byte, err error) {
 	}
 	cipherBytes, err := base64.StdEncoding.DecodeString(buffer.String())
 	check(err)
-	checkCipherTextLength(cipherBytes, filepath)
+	plaintext, err = PlainTextFromBytes(cipherBytes)
+	return
+}
+
+// PlainTextFromBytes returns a slice of bytes (the plaintext), decrypted from
+// a byte slice
+func PlainTextFromBytes(cipherBytes []byte) (plaintext []byte, err error) {
+	checkCipherTextLength(cipherBytes)
 	cipherLength := len(cipherBytes)
 	encrypt := false
 	encryptedDek := cipherBytes[cipherLength-encDekLength : cipherLength]
