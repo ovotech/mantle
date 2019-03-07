@@ -33,8 +33,9 @@ func init() {
 
 //EncryptCommand type
 type EncryptCommand struct {
-	Filepath   string `short:"f" long:"filepath" description:"Path of file to encrypt" default:"./plain.txt"`
-	SingleLine bool   `short:"s" long:"singleLine" description:"Disable use of newline chars in ciphertext"`
+	DisableValidation bool   `short:"d" long:"disableValidation" description:"Disable validation of ciphertext"`
+	Filepath          string `short:"f" long:"filepath" description:"Path of file to encrypt" default:"./plain.txt"`
+	SingleLine        bool   `short:"s" long:"singleLine" description:"Disable use of newline chars in ciphertext"`
 }
 
 var encryptCommand EncryptCommand
@@ -44,7 +45,7 @@ func (x *EncryptCommand) Execute(args []string) (err error) {
 	fmt.Println("Encrypting...")
 	dat, err := ioutil.ReadFile(x.Filepath)
 	check(err)
-	err = CipherText(dat, x.Filepath, x.SingleLine)
+	err = CipherText(dat, x.Filepath, x.SingleLine, x.DisableValidation)
 	check(secureDelete(x.Filepath, false))
 	return err
 }
@@ -63,10 +64,10 @@ func insertNewLines(cipherTexts []byte) (newLineText []byte) {
 
 //CipherText creates a ciphertext encrypted from a slice of bytes
 //(the plaintext), and writes to File and Console.
-func CipherText(plaintext []byte, filepath string, singleLine bool) (err error) {
+func CipherText(plaintext []byte, filepath string, singleLine, disableValidation bool) (err error) {
 	outputFilepath := "./cipher.txt"
 	fileMode := os.FileMode.Perm(0644)
-	cipherBytes := CipherBytes(plaintext, singleLine)
+	cipherBytes := CipherBytes(plaintext, singleLine, disableValidation)
 	fmt.Println("-----BEGIN (ENCRYPTED DATA + DEK) STRING-----")
 	fmt.Printf("%s\n", cipherBytes)
 	fmt.Println("-----END (ENCRYPTED DATA + DEK) STRING-----")
@@ -78,14 +79,14 @@ func CipherText(plaintext []byte, filepath string, singleLine bool) (err error) 
 
 //CipherBytes uses 'defaultOptions' go-flags to encrypt plaintext bytes and
 //return ciphertext bytes
-func CipherBytes(plaintext []byte, singleLine bool) (cipherBytes []byte) {
-	return CipherBytesFromPrimitives(plaintext, singleLine, defaultOptions.ProjectID,
+func CipherBytes(plaintext []byte, singleLine, disableValidation bool) (cipherBytes []byte) {
+	return CipherBytesFromPrimitives(plaintext, singleLine, disableValidation, defaultOptions.ProjectID,
 		defaultOptions.LocationID, defaultOptions.KeyRingID,
 		defaultOptions.CryptoKeyID, defaultOptions.KeyName)
 }
 
 //CipherBytesFromPrimitives encrypts plaintext bytes and returns ciphertext bytes
-func CipherBytesFromPrimitives(plaintext []byte, singleLine bool, projectID,
+func CipherBytesFromPrimitives(plaintext []byte, singleLine, disableValidation bool, projectID,
 	locationID, keyRingID, cryptoKeyID, keyName string) (cipherBytes []byte) {
 	dek := randByteSlice(dekLength)
 	nonce := randByteSlice(nonceLength)
@@ -98,6 +99,14 @@ func CipherBytesFromPrimitives(plaintext []byte, singleLine bool, projectID,
 		encryptedDek...)))
 	if !singleLine {
 		cipherBytes = insertNewLines(cipherBytes)
+	}
+	if !disableValidation {
+		//validate the ciphertext
+		fmt.Println("Validating ciphertext")
+		cipherString, err := base64.StdEncoding.DecodeString(string(cipherBytes))
+		check(err)
+		_, err = PlainTextFromBytes(cipherString)
+		check(err)
 	}
 	return
 }
