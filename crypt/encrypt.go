@@ -105,7 +105,8 @@ func CipherBytesFromPrimitives(plaintext []byte, singleLine, disableValidation b
 		fmt.Println("Validating ciphertext")
 		cipherString, err := base64.StdEncoding.DecodeString(string(cipherBytes))
 		check(err)
-		_, err = PlainTextFromBytes(cipherString)
+		_, err = PlainTextFromPrimitives(cipherString, projectID,
+			locationID, keyRingID, cryptoKeyID, keyName)
 		check(err)
 	}
 	return
