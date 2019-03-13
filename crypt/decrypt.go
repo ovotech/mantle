@@ -98,14 +98,22 @@ func PlainText(filepath string) (plaintext []byte, err error) {
 // PlainTextFromBytes returns a slice of bytes (the plaintext), decrypted from
 // a byte slice
 func PlainTextFromBytes(cipherBytes []byte) (plaintext []byte, err error) {
+	return PlainTextFromPrimitives(cipherBytes, defaultOptions.ProjectID,
+		defaultOptions.LocationID, defaultOptions.KeyRingID,
+		defaultOptions.CryptoKeyID, defaultOptions.KeyName)
+}
+
+// PlainTextFromPrimitives returns a slice of bytes (the plaintext), decrypted from
+// a byte slice
+func PlainTextFromPrimitives(cipherBytes []byte, projectID, locationID, keyRingID,
+	cryptoKeyID, keyName string) (plaintext []byte, err error) {
 	checkCipherTextLength(cipherBytes)
 	cipherLength := len(cipherBytes)
 	encrypt := false
 	encryptedDek := cipherBytes[cipherLength-encDekLength : cipherLength]
 	nonce := cipherBytes[cipherLength-(encDekLength+nonceLength) : cipherLength-encDekLength]
-	decryptedDek := googleKMSCrypto(encryptedDek, defaultOptions.ProjectID,
-		defaultOptions.LocationID, defaultOptions.KeyRingID,
-		defaultOptions.CryptoKeyID, defaultOptions.KeyName, encrypt)
+	decryptedDek := googleKMSCrypto(encryptedDek, projectID,
+		locationID, keyRingID, cryptoKeyID, keyName, encrypt)
 	plaintext = cipherText(cipherBytes[0:len(cipherBytes)-(encDekLength+nonceLength)],
 		cipherblock(decryptedDek), nonce, encrypt)
 	return
