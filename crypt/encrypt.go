@@ -91,8 +91,9 @@ func CipherBytesFromPrimitives(plaintext []byte, singleLine, disableValidation b
 	dek := randByteSlice(dekLength)
 	nonce := randByteSlice(nonceLength)
 	encrypt := true
-	encryptedDek := googleKMSCrypto(dek, projectID, locationID, keyRingID,
+	encryptedDek, err := googleKMSCrypto(dek, projectID, locationID, keyRingID,
 		cryptoKeyID, keyName, encrypt)
+	check(err)
 	cipherBytes = []byte(base64.StdEncoding.EncodeToString(append(
 		append(cipherText(plaintext, cipherblock(dek), nonce, encrypt),
 			nonce...),

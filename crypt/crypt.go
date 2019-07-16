@@ -45,7 +45,7 @@ var Parser = flags.NewParser(&defaultOptions, flags.Default)
 
 const nonceLength = 12
 const dekLength = 32
-const encDekLength = 113
+const encDekLength = 114
 
 //check panics if error is not nil
 func check(e error) {
@@ -72,7 +72,7 @@ func kmsClient() (kmsService *cloudkms.Service) {
 
 //googleKMSCrypto uses google kms to either encrypt or decrypt a byte slice
 func googleKMSCrypto(payload []byte, projectid, locationid, keyringid,
-	cryptokeyid, keyname string, encrypt bool) (resultText []byte) {
+	cryptokeyid, keyname string, encrypt bool) (resultText []byte, err error) {
 	kmsService := kmsClient()
 	var parentName string
 	if len(keyname) > 0 {
@@ -83,20 +83,21 @@ func googleKMSCrypto(payload []byte, projectid, locationid, keyringid,
 			locationid, keyringid, cryptokeyid)
 	}
 	if encrypt {
-		resultText = googleKMSEncrypt(payload, parentName, kmsService)
+		resultText, err = googleKMSEncrypt(payload, parentName, kmsService)
 	} else {
-		resultText = googleKMSDecrypt(payload, parentName, kmsService)
+		resultText, err = googleKMSDecrypt(payload, parentName, kmsService)
 	}
 	return
 }
 
 //googleKMSEncrypt uses google kms to encypt a bite slice
 func googleKMSEncrypt(payload []byte, parentName string,
-	kmsService *cloudkms.Service) (resultText []byte) {
+	kmsService *cloudkms.Service) (resultText []byte, err error) {
 	req := &cloudkms.EncryptRequest{
 		Plaintext: base64.StdEncoding.EncodeToString(payload),
 	}
-	resp, err := kmsService.Projects.Locations.KeyRings.CryptoKeys.
+	var resp *cloudkms.EncryptResponse
+	resp, err = kmsService.Projects.Locations.KeyRings.CryptoKeys.
 		Encrypt(parentName, req).Do()
 	check(err)
 	var errm error
@@ -107,13 +108,15 @@ func googleKMSEncrypt(payload []byte, parentName string,
 
 //googleKMSDecrypt uses google kms to decypt a bite slice
 func googleKMSDecrypt(payload []byte, parentName string,
-	kmsService *cloudkms.Service) (resultText []byte) {
+	kmsService *cloudkms.Service) (resultText []byte, err error) {
 	req := &cloudkms.DecryptRequest{
 		Ciphertext: base64.StdEncoding.EncodeToString(payload),
 	}
-	resp, err := kmsService.Projects.Locations.KeyRings.CryptoKeys.
-		Decrypt(parentName, req).Do()
-	check(err)
+	var resp *cloudkms.DecryptResponse
+	if resp, err = kmsService.Projects.Locations.KeyRings.CryptoKeys.
+		Decrypt(parentName, req).Do(); err != nil {
+		return
+	}
 	var errm error
 	resultText, errm = base64.StdEncoding.DecodeString(resp.Plaintext)
 	check(errm)

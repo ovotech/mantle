@@ -110,11 +110,22 @@ func PlainTextFromPrimitives(cipherBytes []byte, projectID, locationID, keyRingI
 	checkCipherTextLength(cipherBytes)
 	cipherLength := len(cipherBytes)
 	encrypt := false
+	if plaintext, err = plainTextWithDekLength(cipherBytes, projectID, locationID, keyRingID,
+		cryptoKeyID, keyName, encDekLength, cipherLength, encrypt); err != nil {
+		plaintext, err = plainTextWithDekLength(cipherBytes, projectID, locationID, keyRingID,
+			cryptoKeyID, keyName, encDekLength-1, cipherLength, encrypt)
+	}
+	return
+}
+
+func plainTextWithDekLength(cipherBytes []byte, projectID, locationID, keyRingID,
+	cryptoKeyID, keyName string, encDekLength, cipherLength int, encrypt bool) (plaintext []byte, err error) {
 	encryptedDek := cipherBytes[cipherLength-encDekLength : cipherLength]
 	nonce := cipherBytes[cipherLength-(encDekLength+nonceLength) : cipherLength-encDekLength]
-	decryptedDek := googleKMSCrypto(encryptedDek, projectID,
-		locationID, keyRingID, cryptoKeyID, keyName, encrypt)
-	plaintext = cipherText(cipherBytes[0:len(cipherBytes)-(encDekLength+nonceLength)],
-		cipherblock(decryptedDek), nonce, encrypt)
+	if decryptedDek, err := googleKMSCrypto(encryptedDek, projectID,
+		locationID, keyRingID, cryptoKeyID, keyName, encrypt); err == nil {
+		plaintext = cipherText(cipherBytes[0:len(cipherBytes)-(encDekLength+nonceLength)],
+			cipherblock(decryptedDek), nonce, encrypt)
+	}
 	return
 }
