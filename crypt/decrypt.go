@@ -122,7 +122,8 @@ func plainTextWithDekLength(cipherBytes []byte, projectID, locationID, keyRingID
 	cryptoKeyID, keyName string, encDekLength, cipherLength int, encrypt bool) (plaintext []byte, err error) {
 	encryptedDek := cipherBytes[cipherLength-encDekLength : cipherLength]
 	nonce := cipherBytes[cipherLength-(encDekLength+nonceLength) : cipherLength-encDekLength]
-	if decryptedDek, err := googleKMSCrypto(encryptedDek, projectID,
+	var decryptedDek []byte
+	if decryptedDek, err = googleKMSCrypto(encryptedDek, projectID,
 		locationID, keyRingID, cryptoKeyID, keyName, encrypt); err == nil {
 		plaintext = cipherText(cipherBytes[0:len(cipherBytes)-(encDekLength+nonceLength)],
 			cipherblock(decryptedDek), nonce, encrypt)
