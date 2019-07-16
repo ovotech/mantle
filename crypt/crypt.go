@@ -114,9 +114,9 @@ func googleKMSDecrypt(payload []byte, parentName string,
 	}
 	var resp *cloudkms.DecryptResponse
 	if resp, err = kmsService.Projects.Locations.KeyRings.CryptoKeys.
-		Decrypt(parentName, req).Do(); err != nil{
-			return
-		}
+		Decrypt(parentName, req).Do(); err != nil {
+		return
+	}
 	var errm error
 	resultText, errm = base64.StdEncoding.DecodeString(resp.Plaintext)
 	check(errm)
