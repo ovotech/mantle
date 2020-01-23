@@ -16,7 +16,7 @@ jobs:
            name: goreleaser
            command: |
              export GITHUB_TOKEN=$GITHUB
-             curl -sL https://git.io/goreleaser | bash
+             curl -sL https://git.io/goreleaser | VERSION=v0.113.0 bash
 
   docker_build_and_push:
     <<: *defaults
