@@ -69,7 +69,7 @@ func (x *DecryptCommand) Execute(args []string) error {
 	return err
 }
 
-func checkCipherTextLength(ciphertext []byte) {
+func checkCipherTextLength(ciphertext []byte, encDekLength int) {
 	length := len(ciphertext)
 	minLength := encDekLength + nonceLength
 	if length < minLength {
@@ -100,30 +100,36 @@ func PlainText(filepath string) (plaintext []byte, err error) {
 func PlainTextFromBytes(cipherBytes []byte) (plaintext []byte, err error) {
 	return PlainTextFromPrimitives(cipherBytes, defaultOptions.ProjectID,
 		defaultOptions.LocationID, defaultOptions.KeyRingID,
-		defaultOptions.CryptoKeyID, defaultOptions.KeyName)
+		defaultOptions.CryptoKeyID, defaultOptions.KeyName, gcpKms{})
 }
 
 // PlainTextFromPrimitives returns a slice of bytes (the plaintext), decrypted from
 // a byte slice
-func PlainTextFromPrimitives(cipherBytes []byte, projectID, locationID, keyRingID,
-	cryptoKeyID, keyName string) (plaintext []byte, err error) {
-	checkCipherTextLength(cipherBytes)
+func PlainTextFromPrimitives(cipherBytes []byte,
+	projectID, locationID, keyRingID, cryptoKeyID, keyName string,
+	kmsProvider kmsProvider) (plaintext []byte, err error) {
+
+	checkCipherTextLength(cipherBytes, kmsProvider.encryptedDekLength())
 	cipherLength := len(cipherBytes)
 	encrypt := false
 	if plaintext, err = plainTextWithDekLength(cipherBytes, projectID, locationID, keyRingID,
-		cryptoKeyID, keyName, encDekLength, cipherLength, encrypt); err != nil {
+		cryptoKeyID, keyName, kmsProvider.encryptedDekLength(), cipherLength, encrypt, kmsProvider); err != nil {
 		plaintext, err = plainTextWithDekLength(cipherBytes, projectID, locationID, keyRingID,
-			cryptoKeyID, keyName, encDekLength-1, cipherLength, encrypt)
+			cryptoKeyID, keyName, kmsProvider.encryptedDekLength()-1, cipherLength, encrypt, kmsProvider)
 	}
 	return
 }
 
-func plainTextWithDekLength(cipherBytes []byte, projectID, locationID, keyRingID,
-	cryptoKeyID, keyName string, encDekLength, cipherLength int, encrypt bool) (plaintext []byte, err error) {
+func plainTextWithDekLength(cipherBytes []byte,
+	projectID, locationID, keyRingID, cryptoKeyID, keyName string,
+	encDekLength, cipherLength int,
+	encrypt bool,
+	kmsProvider kmsProvider) (plaintext []byte, err error) {
+
 	encryptedDek := cipherBytes[cipherLength-encDekLength : cipherLength]
 	nonce := cipherBytes[cipherLength-(encDekLength+nonceLength) : cipherLength-encDekLength]
 	var decryptedDek []byte
-	if decryptedDek, err = googleKMSCrypto(encryptedDek, projectID,
+	if decryptedDek, err = kmsProvider.crypto(encryptedDek, projectID,
 		locationID, keyRingID, cryptoKeyID, keyName, encrypt); err == nil {
 		plaintext = cipherText(cipherBytes[0:len(cipherBytes)-(encDekLength+nonceLength)],
 			cipherblock(decryptedDek), nonce, encrypt)

@@ -31,6 +31,12 @@ func init() {
 		&encryptCommand)
 }
 
+type kmsProvider interface {
+	crypto(payload []byte, projectid, locationid, keyringid,
+		cryptokeyid, keyname string, encrypt bool) (resultText []byte, err error)
+	encryptedDekLength() int
+}
+
 //EncryptCommand type
 type EncryptCommand struct {
 	DisableValidation bool   `short:"d" long:"disableValidation" description:"Disable validation of ciphertext"`
@@ -82,16 +88,18 @@ func CipherText(plaintext []byte, filepath string, singleLine, disableValidation
 func CipherBytes(plaintext []byte, singleLine, disableValidation bool) (cipherBytes []byte) {
 	return CipherBytesFromPrimitives(plaintext, singleLine, disableValidation, defaultOptions.ProjectID,
 		defaultOptions.LocationID, defaultOptions.KeyRingID,
-		defaultOptions.CryptoKeyID, defaultOptions.KeyName)
+		defaultOptions.CryptoKeyID, defaultOptions.KeyName, gcpKms{})
 }
 
-//CipherBytesFromPrimitives encrypts plaintext bytes and returns ciphertext bytes
-func CipherBytesFromPrimitives(plaintext []byte, singleLine, disableValidation bool, projectID,
-	locationID, keyRingID, cryptoKeyID, keyName string) (cipherBytes []byte) {
+func CipherBytesFromPrimitives(plaintext []byte, singleLine,
+	disableValidation bool,
+	projectID, locationID, keyRingID, cryptoKeyID, keyName string,
+	kmsProvider kmsProvider) (cipherBytes []byte) {
+
 	dek := randByteSlice(dekLength)
 	nonce := randByteSlice(nonceLength)
 	encrypt := true
-	encryptedDek, err := googleKMSCrypto(dek, projectID, locationID, keyRingID,
+	encryptedDek, err := kmsProvider.crypto(dek, projectID, locationID, keyRingID,
 		cryptoKeyID, keyName, encrypt)
 	check(err)
 	cipherBytes = []byte(base64.StdEncoding.EncodeToString(append(
@@ -107,7 +115,7 @@ func CipherBytesFromPrimitives(plaintext []byte, singleLine, disableValidation b
 		cipherString, err := base64.StdEncoding.DecodeString(string(cipherBytes))
 		check(err)
 		_, err = PlainTextFromPrimitives(cipherString, projectID,
-			locationID, keyRingID, cryptoKeyID, keyName)
+			locationID, keyRingID, cryptoKeyID, keyName, kmsProvider)
 		check(err)
 	}
 	return
