@@ -98,9 +98,12 @@ func PlainText(filepath string) (plaintext []byte, err error) {
 // PlainTextFromBytes returns a slice of bytes (the plaintext), decrypted from
 // a byte slice
 func PlainTextFromBytes(cipherBytes []byte) (plaintext []byte, err error) {
+
+	kmsProvider, err := getKmsProvider(defaultOptions.KMSProvider)
+	check(err)
 	return PlainTextFromPrimitives(cipherBytes, defaultOptions.ProjectID,
 		defaultOptions.LocationID, defaultOptions.KeyRingID,
-		defaultOptions.CryptoKeyID, defaultOptions.KeyName, gcpKms{})
+		defaultOptions.CryptoKeyID, defaultOptions.KeyName, kmsProvider)
 }
 
 // PlainTextFromPrimitives returns a slice of bytes (the plaintext), decrypted from

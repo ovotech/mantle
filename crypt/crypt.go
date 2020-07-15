@@ -21,27 +21,52 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	flags "github.com/jessevdk/go-flags"
 )
 
-//Defaults type defining input flags
-type Defaults struct {
-	CryptoKeyID string `short:"c" long:"cryptokeyId" description:"Google kms crytoKeyId" required:"false"`
-	KeyRingID   string `short:"k" long:"keyringId" description:"Google kms keyRingId" required:"false"`
-	KeyName     string `short:"n" long:"keyName" description:"Google kms keyName" required:"false"`
-	LocationID  string `short:"l" long:"locationId" description:"Google kms locationId" required:"false"`
-	ProjectID   string `short:"p" long:"projectId" description:"Google projectId" required:"false"`
-	KMSProvider string ``
+type kmsProvider interface {
+	crypto(payload []byte, projectid, locationid, keyringid,
+		cryptokeyid, keyname string, encrypt bool) (resultText []byte, err error)
+	encryptedDekLength() int
 }
 
-var defaultOptions = Defaults{}
+//Defaults type defining input flags
+type Defaults struct {
+	CryptoKeyID string `short:"c" long:"cryptokeyId" description:"Google KMS crytoKeyId" required:"false"`
+	KeyRingID   string `short:"k" long:"keyringId" description:"Google KMS keyRingId" required:"false"`
+	KeyName     string `short:"n" long:"keyName" description:"Google KMS keyName or AWS KMS keyId" required:"false"`
+	LocationID  string `short:"l" long:"locationId" description:"Google KMS locationId" required:"false"`
+	ProjectID   string `short:"p" long:"projectId" description:"Google projectId" required:"false"`
+	KMSProvider string `short:"m" long:"kmsProvider" description:"KMS provider" required:"false"`
+}
 
-//Parser is a new Parser with default options
-var Parser = flags.NewParser(&defaultOptions, flags.Default)
+var (
+	defaultOptions = Defaults{}
+	//Parser is a new Parser with default options
+	Parser       = flags.NewParser(&defaultOptions, flags.Default)
+	kmsProviders = map[string]kmsProvider{
+		"AWS": awsKms{},
+		"GCP": gcpKms{},
+	}
+)
 
-const nonceLength = 12
-const dekLength = 32
+const (
+	nonceLength = 12
+	dekLength   = 32
+)
+
+func getKmsProvider(provider string) (kmsProvider kmsProvider, err error) {
+	if provider == "" {
+		return gcpKms{}, nil
+	}
+	kmsProvider, ok := kmsProviders[strings.ToUpper(provider)]
+	if !ok {
+		err = fmt.Errorf("KMS Provider %v not supported", provider)
+	}
+	return
+}
 
 //check panics if error is not nil
 func check(e error) {

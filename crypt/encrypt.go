@@ -31,12 +31,6 @@ func init() {
 		&encryptCommand)
 }
 
-type kmsProvider interface {
-	crypto(payload []byte, projectid, locationid, keyringid,
-		cryptokeyid, keyname string, encrypt bool) (resultText []byte, err error)
-	encryptedDekLength() int
-}
-
 //EncryptCommand type
 type EncryptCommand struct {
 	DisableValidation bool   `short:"d" long:"disableValidation" description:"Disable validation of ciphertext"`
@@ -86,9 +80,12 @@ func CipherText(plaintext []byte, filepath string, singleLine, disableValidation
 //CipherBytes uses 'defaultOptions' go-flags to encrypt plaintext bytes and
 //return ciphertext bytes
 func CipherBytes(plaintext []byte, singleLine, disableValidation bool) (cipherBytes []byte) {
+
+	kmsProvider, err := getKmsProvider(defaultOptions.KMSProvider)
+	check(err)
 	return CipherBytesFromPrimitives(plaintext, singleLine, disableValidation, defaultOptions.ProjectID,
 		defaultOptions.LocationID, defaultOptions.KeyRingID,
-		defaultOptions.CryptoKeyID, defaultOptions.KeyName, gcpKms{})
+		defaultOptions.CryptoKeyID, defaultOptions.KeyName, kmsProvider)
 }
 
 func CipherBytesFromPrimitives(plaintext []byte, singleLine,
