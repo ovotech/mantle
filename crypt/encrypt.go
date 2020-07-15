@@ -88,6 +88,7 @@ func CipherBytes(plaintext []byte, singleLine, disableValidation bool) (cipherBy
 		defaultOptions.CryptoKeyID, defaultOptions.KeyName, kmsProvider)
 }
 
+//CipherBytesFromPrimitives encrypts plaintext bytes and returns ciphertext bytes
 func CipherBytesFromPrimitives(plaintext []byte, singleLine,
 	disableValidation bool,
 	projectID, locationID, keyRingID, cryptoKeyID, keyName string,
