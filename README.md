@@ -119,12 +119,18 @@ To test this out, you should be able to:
 $ export KEY_NAME="projects/<project_name>/locations/<location>/keyRings/<keyring_name>/cryptoKeys/<key_name>"
 
 $ echo "helloworld" > plain.txt
-$ mantle encrypt -n $KEY_NAME
+$ mantle encrypt -n $KEY_NAME -m gcp
 $ cat cipher.txt
 
-$ mantle decrypt -n $KEY_NAME
+$ mantle decrypt -n $KEY_NAME -m gcp
 $ cat plain.txt
 ```
+
+#### Notes
+
+* The `-m,--kmsProvider` flag defaults to `gcp`. This is to make `mantle`
+backwards compatible for GCP users who don't use that flag (when `mantle` was
+first released, GCP was the only provider integrated).
 
 ## How It Works
 
