@@ -8,7 +8,7 @@ key layers (specifically
 
 This avoids the need to send secret data to Cloud KMS services when encrypting
 (only your own data encryption key is sent), and allows for encryption of data
-bigger than 4096 bytes.
+bigger than 4096 bytes (a restriction often imposed by Cloud KMS).
 
 ## Install
 
