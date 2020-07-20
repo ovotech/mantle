@@ -1,8 +1,14 @@
 # .goreleaser.yml
+env:
+  - GO111MODULE=on
+before:
+  hooks:
+    - go mod download
 archive:
   format: binary
 builds:
-  - main: ./
+  - id: binary
+    main: ./
     goos:
       - windows
       - darwin
@@ -11,3 +17,16 @@ builds:
       - amd64
 checksum:
   name_template: "{{ .ProjectName }}_checksums.txt"
+dockers:
+  -
+    goos: linux
+    goarch: amd64
+    binaries:
+    - mantle
+    builds:
+    - binary
+    image_templates:
+    - "ovotech/mantle:{{ .Tag }}"
+    - "ovotech/mantle:v{{ .Major }}"
+    - "ovotech/mantle:v{{ .Major }}.{{ .Minor }}"
+    - "ovotech/mantle:latest"
