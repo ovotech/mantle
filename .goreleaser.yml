@@ -23,8 +23,6 @@ dockers:
     goarch: amd64
     binaries:
     - mantle
-    builds:
-    - binary
     image_templates:
     - "ovotech/mantle:{{ .Tag }}"
     - "ovotech/mantle:v{{ .Major }}"
