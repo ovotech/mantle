@@ -15,37 +15,58 @@
 package crypt
 
 import (
-	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	flags "github.com/jessevdk/go-flags"
-	"golang.org/x/oauth2/google"
-	cloudkms "google.golang.org/api/cloudkms/v1"
 )
+
+type kmsProvider interface {
+	crypto(payload []byte, projectid, locationid, keyringid,
+		cryptokeyid, keyname string, encrypt bool) (resultText []byte, err error)
+	encryptedDekLength() int
+}
 
 //Defaults type defining input flags
 type Defaults struct {
-	CryptoKeyID string `short:"c" long:"cryptokeyId" description:"Google kms crytoKeyId" required:"false"`
-	KeyRingID   string `short:"k" long:"keyringId" description:"Google kms keyRingId" required:"false"`
-	KeyName     string `short:"n" long:"keyName" description:"Google kms keyName" required:"false"`
-	LocationID  string `short:"l" long:"locationId" description:"Google kms locationId" required:"false"`
+	CryptoKeyID string `short:"c" long:"cryptokeyId" description:"Google KMS crytoKeyId" required:"false"`
+	KeyRingID   string `short:"k" long:"keyringId" description:"Google KMS keyRingId" required:"false"`
+	KeyName     string `short:"n" long:"keyName" description:"Google KMS keyName or AWS KMS keyId" required:"false"`
+	LocationID  string `short:"l" long:"locationId" description:"Google KMS locationId" required:"false"`
 	ProjectID   string `short:"p" long:"projectId" description:"Google projectId" required:"false"`
+	KMSProvider string `short:"m" long:"kmsProvider" description:"KMS provider" required:"false"`
 }
 
-var defaultOptions = Defaults{}
+var (
+	defaultOptions = Defaults{}
+	//Parser is a new Parser with default options
+	Parser       = flags.NewParser(&defaultOptions, flags.Default)
+	kmsProviders = map[string]kmsProvider{
+		"AWS": awsKms{},
+		"GCP": gcpKms{},
+	}
+)
 
-//Parser is a new Parser with default options
-var Parser = flags.NewParser(&defaultOptions, flags.Default)
+const (
+	nonceLength = 12
+	dekLength   = 32
+)
 
-const nonceLength = 12
-const dekLength = 32
-const encDekLength = 114
+func getKmsProvider(provider string) (kmsProvider kmsProvider, err error) {
+	if provider == "" {
+		return gcpKms{}, nil
+	}
+	kmsProvider, ok := kmsProviders[strings.ToUpper(provider)]
+	if !ok {
+		err = fmt.Errorf("KMS Provider %v not supported", provider)
+	}
+	return
+}
 
 //check panics if error is not nil
 func check(e error) {
@@ -57,69 +78,6 @@ func check(e error) {
 //byteSliceToString converts a byte slice to a string, and returns it
 func byteSliceToString(dat []byte) (resultString string) {
 	resultString = fmt.Sprint(string(dat[:]))
-	return
-}
-
-//kmsClient returns a kms service created from a default google client
-func kmsClient() (kmsService *cloudkms.Service) {
-	ctx := context.Background()
-	client, errc := google.DefaultClient(ctx, cloudkms.CloudPlatformScope)
-	check(errc)
-	kmsService, errk := cloudkms.New(client)
-	check(errk)
-	return
-}
-
-//googleKMSCrypto uses google kms to either encrypt or decrypt a byte slice
-func googleKMSCrypto(payload []byte, projectid, locationid, keyringid,
-	cryptokeyid, keyname string, encrypt bool) (resultText []byte, err error) {
-	kmsService := kmsClient()
-	var parentName string
-	if len(keyname) > 0 {
-		parentName = keyname
-	} else {
-		parentName = fmt.Sprintf(
-			"projects/%s/locations/%s/keyRings/%s/cryptoKeys/%s", projectid,
-			locationid, keyringid, cryptokeyid)
-	}
-	if encrypt {
-		resultText, err = googleKMSEncrypt(payload, parentName, kmsService)
-	} else {
-		resultText, err = googleKMSDecrypt(payload, parentName, kmsService)
-	}
-	return
-}
-
-//googleKMSEncrypt uses google kms to encypt a bite slice
-func googleKMSEncrypt(payload []byte, parentName string,
-	kmsService *cloudkms.Service) (resultText []byte, err error) {
-	req := &cloudkms.EncryptRequest{
-		Plaintext: base64.StdEncoding.EncodeToString(payload),
-	}
-	var resp *cloudkms.EncryptResponse
-	resp, err = kmsService.Projects.Locations.KeyRings.CryptoKeys.
-		Encrypt(parentName, req).Do()
-	check(err)
-	var errm error
-	resultText, errm = base64.StdEncoding.DecodeString(resp.Ciphertext)
-	check(errm)
-	return
-}
-
-//googleKMSDecrypt uses google kms to decypt a bite slice
-func googleKMSDecrypt(payload []byte, parentName string,
-	kmsService *cloudkms.Service) (resultText []byte, err error) {
-	req := &cloudkms.DecryptRequest{
-		Ciphertext: base64.StdEncoding.EncodeToString(payload),
-	}
-	var resp *cloudkms.DecryptResponse
-	if resp, err = kmsService.Projects.Locations.KeyRings.CryptoKeys.
-		Decrypt(parentName, req).Do(); err != nil {
-		return
-	}
-	var errm error
-	resultText, errm = base64.StdEncoding.DecodeString(resp.Plaintext)
-	check(errm)
 	return
 }
 
