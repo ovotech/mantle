@@ -1,7 +1,8 @@
 FROM google/cloud-sdk:alpine
 
 RUN apk update && apk add jq && rm -rf /var/cache/apk/*
-ADD mantle /go/bin/mantle
+ADD mantle /usr/local/bin/mantle
 RUN addgroup -S mantle && adduser -S mantle -G mantle
 
+RUN chmod u+x /usr/local/bin/mantle
 USER mantle
