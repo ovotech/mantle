@@ -20,14 +20,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 )
 
-type awsKms struct{}
+// AwsKms type
+type AwsKms struct{}
 
-func (a awsKms) encryptedDekLength() int {
+func (a AwsKms) encryptedDekLength() int {
 	return 185
 }
 
 // uses aws kms to either encrypt or decrypt a byte slice
-func (a awsKms) crypto(payload []byte, projectid, locationid, keyringid,
+func (a AwsKms) crypto(payload []byte, projectid, locationid, keyringid,
 	cryptokeyid, keyname string, encrypt bool) (resultText []byte, err error) {
 
 	svc := kms.New(session.New(&aws.Config{

@@ -9,14 +9,15 @@ import (
 	cloudkms "google.golang.org/api/cloudkms/v1"
 )
 
-type gcpKms struct{}
+// GcpKms type
+type GcpKms struct{}
 
-func (g gcpKms) encryptedDekLength() int {
+func (g GcpKms) encryptedDekLength() int {
 	return 114
 }
 
 // uses google kms to either encrypt or decrypt a byte slice
-func (g gcpKms) crypto(payload []byte, projectid, locationid, keyringid,
+func (g GcpKms) crypto(payload []byte, projectid, locationid, keyringid,
 	cryptokeyid, keyname string, encrypt bool) (resultText []byte, err error) {
 	kmsService := kmsClient()
 	var parentName string
