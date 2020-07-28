@@ -110,7 +110,7 @@ func PlainTextFromBytes(cipherBytes []byte) (plaintext []byte, err error) {
 // a byte slice
 func PlainTextFromPrimitives(cipherBytes []byte,
 	projectID, locationID, keyRingID, cryptoKeyID, keyName string,
-	kmsProvider kmsProvider) (plaintext []byte, err error) {
+	kmsProvider KmsProvider) (plaintext []byte, err error) {
 
 	checkCipherTextLength(cipherBytes, kmsProvider.encryptedDekLength())
 	cipherLength := len(cipherBytes)
@@ -127,7 +127,7 @@ func plainTextWithDekLength(cipherBytes []byte,
 	projectID, locationID, keyRingID, cryptoKeyID, keyName string,
 	encDekLength, cipherLength int,
 	encrypt bool,
-	kmsProvider kmsProvider) (plaintext []byte, err error) {
+	kmsProvider KmsProvider) (plaintext []byte, err error) {
 
 	encryptedDek := cipherBytes[cipherLength-encDekLength : cipherLength]
 	nonce := cipherBytes[cipherLength-(encDekLength+nonceLength) : cipherLength-encDekLength]
