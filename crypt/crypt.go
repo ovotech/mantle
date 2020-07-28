@@ -48,8 +48,8 @@ var (
 	//Parser is a new Parser with default options
 	Parser       = flags.NewParser(&defaultOptions, flags.Default)
 	kmsProviders = map[string]KmsProvider{
-		"AWS": awsKms{},
-		"GCP": gcpKms{},
+		"AWS": AwsKms{},
+		"GCP": GcpKms{},
 	}
 )
 
@@ -60,7 +60,7 @@ const (
 
 func getKmsProvider(provider string) (kmsProvider KmsProvider, err error) {
 	if provider == "" {
-		return gcpKms{}, nil
+		return GcpKms{}, nil
 	}
 	kmsProvider, ok := kmsProviders[strings.ToUpper(provider)]
 	if !ok {
