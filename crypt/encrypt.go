@@ -92,7 +92,7 @@ func CipherBytes(plaintext []byte, singleLine, disableValidation bool) (cipherBy
 func CipherBytesFromPrimitives(plaintext []byte, singleLine,
 	disableValidation bool,
 	projectID, locationID, keyRingID, cryptoKeyID, keyName string,
-	kmsProvider kmsProvider) (cipherBytes []byte) {
+	kmsProvider KmsProvider) (cipherBytes []byte) {
 
 	dek := randByteSlice(dekLength)
 	nonce := randByteSlice(nonceLength)

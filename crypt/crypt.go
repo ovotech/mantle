@@ -26,7 +26,8 @@ import (
 	flags "github.com/jessevdk/go-flags"
 )
 
-type kmsProvider interface {
+// KmsProvider type
+type KmsProvider interface {
 	crypto(payload []byte, projectid, locationid, keyringid,
 		cryptokeyid, keyname string, encrypt bool) (resultText []byte, err error)
 	encryptedDekLength() int
@@ -46,7 +47,7 @@ var (
 	defaultOptions = Defaults{}
 	//Parser is a new Parser with default options
 	Parser       = flags.NewParser(&defaultOptions, flags.Default)
-	kmsProviders = map[string]kmsProvider{
+	kmsProviders = map[string]KmsProvider{
 		"AWS": awsKms{},
 		"GCP": gcpKms{},
 	}
@@ -57,7 +58,7 @@ const (
 	dekLength   = 32
 )
 
-func getKmsProvider(provider string) (kmsProvider kmsProvider, err error) {
+func getKmsProvider(provider string) (kmsProvider KmsProvider, err error) {
 	if provider == "" {
 		return gcpKms{}, nil
 	}
