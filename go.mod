@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	cloud.google.com/go v0.26.0
-	github.com/aws/aws-sdk-go v1.33.5
+	github.com/aws/aws-sdk-go v1.34.0
 	github.com/golang/protobuf v1.2.0
 	github.com/jessevdk/go-flags v1.4.0
 	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
