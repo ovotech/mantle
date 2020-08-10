@@ -104,7 +104,7 @@ jobs:
              go test ./... -v
 
   e2e_tests:
-    working_directory: /tmp
+    working_directory: /tmp/mantle
 
     docker:
       - image: ovotech/mantle
