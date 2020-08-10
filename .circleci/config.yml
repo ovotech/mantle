@@ -104,10 +104,10 @@ jobs:
              go test ./... -v
 
   e2e_tests:
-    working_directory: /tmp/mantle
+    <<: *defaults
 
     docker:
-      - image: ovotech/mantle
+      - image: cimg/go:1.13
     
     steps:
       - checkout
