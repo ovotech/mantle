@@ -87,6 +87,38 @@ jobs:
         name: go build
         command: go build
 
+  go_test:
+    <<: *defaults
+
+    docker:
+      - image: eversc/go-pr-checks
+
+    steps:
+      - checkout
+
+      - run:
+           name: go test
+           command: |
+             echo $GCLOUD_SERVICE_KEY > /tmp/key.json
+             export GOOGLE_APPLICATION_CREDENTIALS=/tmp/key.json
+             go test ./... -v
+
+  e2e_tests:
+    docker:
+      - image: cimg/go:1.13
+    
+    steps:
+      - checkout
+
+      - run:
+            name: e2e tests
+            command: |
+              go build
+              echo $GCLOUD_SERVICE_KEY > /tmp/key.json
+              export GOOGLE_APPLICATION_CREDENTIALS=/tmp/key.json
+              cd tests
+              ./e2e-tests.sh
+
 workflows:
   version: 2
   goreleaser_pipeline:
@@ -116,6 +148,14 @@ workflows:
           branches:
             ignore: master
     - go_build:
+        filters:
+          branches:
+            ignore: master
+    - go_test:
+        filters:
+          branches:
+            ignore: master
+    - e2e_tests:
         filters:
           branches:
             ignore: master

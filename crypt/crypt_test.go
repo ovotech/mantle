@@ -15,6 +15,7 @@
 package crypt
 
 import (
+	"encoding/base64"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -71,15 +72,41 @@ func TestSecureDelete(t *testing.T) {
 	}
 }
 
-// func TestPlainText(t *testing.T) {
-// 	path := os.TempDir() + "plain.txt"
-// 	ciphertextLength := 125
-// 	b := make([]byte, ciphertextLength)
-//
-// 	s1 := base64.StdEncoding.EncodeToString(b)
-//
-// 	err := ioutil.WriteFile(path, []byte(s1), 0644)
-// 	fmt.Println(s1)
-// 	check(err)
-// 	PlainText(path)
-// }
+func TestPlainText(t *testing.T) {
+	path := os.TempDir() + "plain.txt"
+	ciphertextLength := 126
+	b := make([]byte, ciphertextLength)
+
+	s1 := base64.StdEncoding.EncodeToString(b)
+
+	err := ioutil.WriteFile(path, []byte(s1), 0644)
+
+	check(err)
+	PlainText(path)
+}
+
+var providerTests = []struct {
+	provider  string
+	supported bool
+}{
+	{"aws", true},
+	{"AWS", true},
+	{"gcp", true},
+	{"GCP", true},
+	{"blah", false},
+}
+
+func TestGetKmsProvider(t *testing.T) {
+	for _, providerTest := range providerTests {
+		_, err := getKmsProvider(providerTest.provider)
+		provider := providerTest.provider
+		supported := providerTest.supported
+		if err == nil && !supported {
+			t.Errorf("Expected unsupported error for provider: %s", provider)
+		}
+		if err != nil && supported {
+			t.Errorf("Not expecting unsupported error for provider %s", provider)
+		}
+	}
+
+}
