@@ -104,8 +104,6 @@ jobs:
              go test ./... -v
 
   e2e_tests:
-    <<: *defaults
-
     docker:
       - image: cimg/go:1.13
     
