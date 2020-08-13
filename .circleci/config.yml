@@ -99,7 +99,7 @@ jobs:
       - run:
            name: go test
            command: |
-             echo $GCLOUD_SERVICE_KEY > /tmp/key.json
+             echo $GCLOUD_SERVICE_KEY | base64 -d > /tmp/key.json
              export GOOGLE_APPLICATION_CREDENTIALS=/tmp/key.json
              go test ./... -v
 
@@ -114,7 +114,7 @@ jobs:
             name: e2e tests
             command: |
               go build
-              echo $GCLOUD_SERVICE_KEY > /tmp/key.json
+              echo $GCLOUD_SERVICE_KEY | base64 -d > /tmp/key.json
               export GOOGLE_APPLICATION_CREDENTIALS=/tmp/key.json
               cd tests
               ./e2e-tests.sh
