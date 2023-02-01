@@ -3,7 +3,7 @@ module github.com/ovotech/mantle
 go 1.18
 
 require (
-	github.com/aws/aws-sdk-go v1.44.171
+	github.com/aws/aws-sdk-go v1.44.191
 	github.com/jessevdk/go-flags v1.5.0
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	google.golang.org/api v0.105.0
